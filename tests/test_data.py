@@ -58,3 +58,22 @@ def test_remove_duplicates():
     cleaned = remove_duplicates(df)
 
     assert len(cleaned) == 2
+
+
+from pathlib import Path
+from mole_ai.data.io import save_dataset
+
+
+def test_save_dataset(tmp_path):
+    df = pd.DataFrame(
+        {
+            "smiles": ["CCO"],
+            "activity": [1]
+        }
+    )
+
+    output_file = tmp_path / "clean_dataset.csv"
+
+    save_dataset(df, str(output_file))
+
+    assert output_file.exists()

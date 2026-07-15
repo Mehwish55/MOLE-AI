@@ -24,7 +24,27 @@ def test_load_feature_dataset(tmp_path):
 
 from mole_ai.models.train import prepare_training_data
 
+from mole_ai.models.train import train_random_forest
 
+
+def test_train_random_forest():
+
+    df = pd.DataFrame(
+        {
+            "mw": [46.07, 44.09, 60.10, 75.20],
+            "logp": [-0.1, 1.4, 0.5, 2.0],
+            "pIC50": [7.2, 6.5, 8.1, 5.9],
+        }
+    )
+
+    X = df.drop(columns=["pIC50"])
+    y = df["pIC50"]
+
+    model, X_test, y_test = train_random_forest(X, y)
+
+    assert model is not None
+    assert len(X_test) > 0
+    assert len(y_test) > 0
 def test_prepare_training_data():
 
     df = pd.DataFrame(

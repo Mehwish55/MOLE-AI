@@ -1,15 +1,22 @@
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.model_selection import train_test_split
-
-
 """
 Model training utilities for MOLE-AI.
 """
 
 import pandas as pd
 
+from sklearn.ensemble import RandomForestRegressor
+
+from sklearn.model_selection import train_test_split
+
+
 
 def load_feature_dataset(file_path: str) -> pd.DataFrame:
+    """
+    Load the engineered feature dataset.
+    """
+
+    return pd.read_csv(file_path)
+
 
 def prepare_training_data(df: pd.DataFrame):
 def train_random_forest(X, y):
@@ -22,12 +29,12 @@ def train_random_forest(X, y):
         Feature matrix.
 
     y : pandas.Series
-        Target values (pIC50).
+        Target values.
 
     Returns
     -------
-    model
-        Trained Random Forest model.
+    model, X_test, y_test
+        Trained model and test data.
     """
 
     X_train, X_test, y_train, y_test = train_test_split(
@@ -50,15 +57,6 @@ def train_random_forest(X, y):
 
     """
     Split dataset into features (X) and target (y).
-
-    Parameters
-    ----------
-    df : pandas.DataFrame
-
-    Returns
-    -------
-    tuple
-        X, y
     """
 
     X = df.drop(columns=["activity"])
@@ -69,19 +67,3 @@ def train_random_forest(X, y):
     y = df["activity"]
 
     return X, y
-
-
-    """
-    Load the engineered feature dataset.
-
-    Parameters
-    ----------
-    file_path : str
-        Path to the feature CSV.
-
-    Returns
-    -------
-    pandas.DataFrame
-        Loaded dataset.
-    """
-    return pd.read_csv(file_path)

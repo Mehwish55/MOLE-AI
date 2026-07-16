@@ -28,3 +28,26 @@ def filter_activity_data(df):
     )
 
     return df
+
+
+import numpy as np
+
+
+def ic50_to_pic50(ic50_nm):
+    """
+    Convert IC50 values from nM to pIC50.
+
+    Parameters
+    ----------
+    ic50_nm : float
+        IC50 value in nanomolar.
+
+    Returns
+    -------
+    float
+        pIC50 value.
+    """
+
+    ic50_molar = ic50_nm * 1e-9
+
+    return -np.log10(ic50_molar)

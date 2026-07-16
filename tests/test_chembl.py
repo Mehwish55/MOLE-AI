@@ -45,3 +45,21 @@ def test_prepare_chembl_dataset():
 
     assert "pIC50" in cleaned.columns
     assert len(cleaned) == 2
+
+from mole_ai.data.chembl import save_chembl_dataset
+
+
+def test_save_chembl_dataset(tmp_path):
+
+    output = tmp_path / "chembl_processed.csv"
+
+    df = pd.DataFrame(
+        {
+            "smiles": ["CCO"],
+            "pIC50": [7.0],
+        }
+    )
+
+    save_chembl_dataset(df, output)
+
+    assert output.exists()

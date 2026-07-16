@@ -71,3 +71,19 @@ def prepare_chembl_dataset(df):
             "pIC50",
         ]
     ]
+
+
+def save_chembl_dataset(df, output_path):
+    """
+    Save processed ChEMBL dataset.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Prepared ChEMBL dataset.
+
+    output_path : str
+        Path for output CSV.
+    """
+
+    df.to_csv(output_path, index=False)

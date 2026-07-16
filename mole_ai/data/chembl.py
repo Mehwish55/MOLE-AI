@@ -51,3 +51,23 @@ def ic50_to_pic50(ic50_nm):
     ic50_molar = ic50_nm * 1e-9
 
     return -np.log10(ic50_molar)
+
+
+def prepare_chembl_dataset(df):
+    """
+    Prepare ChEMBL data for QSAR modeling.
+
+    Converts IC50 values to pIC50 and keeps
+    required columns.
+    """
+
+    df = filter_activity_data(df)
+
+    df["pIC50"] = df["IC50"].apply(ic50_to_pic50)
+
+    return df[
+        [
+            "smiles",
+            "pIC50",
+        ]
+    ]

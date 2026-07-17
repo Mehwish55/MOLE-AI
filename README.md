@@ -11,6 +11,30 @@ modern machine learning with computational chemistry to support molecular
 property prediction, de novo molecule generation, docking, ADMET prediction,
 and multi-objective lead optimization.
 
+## 📌 Current Status
+
+The current implementation of MOLE-AI includes:
+
+- ✅ RDKit molecular preprocessing
+- ✅ Molecular descriptor calculation
+- ✅ Morgan fingerprint generation
+- ✅ ChEMBL dataset preprocessing
+- ✅ Feature engineering
+- ✅ Random Forest QSAR model training
+- ✅ Model evaluation (MAE, RMSE, R²)
+- ✅ pIC50 prediction
+- ✅ Command-line interface (CLI)
+- ✅ Automated unit testing with pytest
+
+The following capabilities are planned and remain on the project roadmap:
+
+- Graph Neural Networks (GNNs)
+- Transformer-based molecular models
+- ADMET prediction
+- Molecular docking
+- Multi-objective optimization
+- Streamlit web application
+
 ---
 
 ## 🚀 Features
@@ -93,6 +117,20 @@ print(result)
 
 ---
 
+## 🧪 Running Tests
+
+Run all unit tests:
+
+```bash
+pytest -v
+```
+
+Run a specific test file:
+
+```bash
+pytest tests/test_predict.py -v
+```
+
 ## Project Structure
 
 ```
@@ -149,6 +187,24 @@ MOLE-AI/
 - Protein Data Bank
 
 ---
+
+## Command-Line Interface
+
+Display the installed version:
+
+```bash
+python -m mole_ai.cli --version
+```
+
+Example prediction command:
+
+```bash
+python -m mole_ai.cli \
+    --predict \
+    --model models/model.pkl \
+    --input data/features.csv \
+    --output predictions.csv
+```
 
 ## Citation
 

@@ -40,3 +40,37 @@ def save_evaluation_report(metrics, output_path):
     df = pd.DataFrame([metrics])
 
     df.to_csv(output_path, index=False)
+
+
+def compare_models(models, X_test, y_test):
+    """
+    Evaluate multiple regression models.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Evaluation metrics for all models.
+    """
+
+    results = []
+
+    for name, model in models.items():
+
+        metrics = evaluate_regression(
+            model,
+            X_test,
+            y_test,
+        )
+
+        metrics["model"] = name
+
+        results.append(metrics)
+
+    results_df = pd.DataFrame(results)
+
+    results_df = results_df.sort_values(
+        by="rmse",
+        ascending=True,
+    ).reset_index(drop=True)
+
+    return results_df

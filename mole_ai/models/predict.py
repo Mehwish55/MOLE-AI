@@ -51,3 +51,34 @@ def predict_from_dataframe(model, feature_df: pd.DataFrame):
         predictions,
         name="predicted_pIC50",
     )
+
+
+def generate_prediction_report(
+    predictions,
+    model_name,
+):
+    """
+    Generate a prediction report.
+
+    Parameters
+    ----------
+    predictions : pandas.Series
+        Predicted activity values.
+
+    model_name : str
+        Name of the prediction model.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Prediction report.
+    """
+
+    report = pd.DataFrame(
+        {
+            "prediction": predictions,
+            "model": model_name,
+        }
+    )
+
+    return report

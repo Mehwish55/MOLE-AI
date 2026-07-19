@@ -51,3 +51,46 @@ def predict_from_dataframe(model, feature_df: pd.DataFrame):
         predictions,
         name="predicted_pIC50",
     )
+
+
+def predict_batch(
+    model,
+    dataframe: pd.DataFrame,
+    feature_columns,
+    id_column="smiles",
+):
+    """
+    Generate predictions for a batch of molecules.
+
+    Parameters
+    ----------
+    model :
+        Trained machine learning model.
+
+    dataframe : pandas.DataFrame
+        Dataset containing molecule information and features.
+
+    feature_columns : list
+        Columns used for prediction.
+
+    id_column : str
+        Molecule identifier column.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Molecule identifiers with predictions.
+    """
+
+    features = dataframe[feature_columns]
+
+    predictions = model.predict(features)
+
+    result = pd.DataFrame(
+        {
+            id_column: dataframe[id_column],
+            "predicted_pIC50": predictions,
+        }
+    )
+
+    return result

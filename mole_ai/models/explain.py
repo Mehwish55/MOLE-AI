@@ -8,20 +8,12 @@ import pandas as pd
 def get_feature_importance(model, feature_names):
     """
     Extract feature importance from tree-based models.
-
-    Parameters
-    ----------
-    model :
-        Trained tree-based model.
-
-    feature_names :
-        List of feature names.
-
-    Returns
-    -------
-    pandas.DataFrame
-        Ranked feature importance table.
     """
+
+    if not hasattr(model, "feature_importances_"):
+        raise ValueError(
+            "Model does not support feature importance."
+        )
 
     importance = model.feature_importances_
 
@@ -36,3 +28,36 @@ def get_feature_importance(model, feature_names):
         by="importance",
         ascending=False,
     ).reset_index(drop=True)
+
+
+def get_top_features(
+    model,
+    feature_names,
+    top_n=5,
+):
+    """
+    Return the most important features.
+
+    Parameters
+    ----------
+    model :
+        Trained tree-based model.
+
+    feature_names :
+        Feature names.
+
+    top_n :
+        Number of features to return.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Top important features.
+    """
+
+    importance = get_feature_importance(
+        model,
+        feature_names,
+    )
+
+    return importance.head(top_n)

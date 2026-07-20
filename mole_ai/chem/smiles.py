@@ -21,3 +21,23 @@ def smiles_to_mol(smiles: str):
     """
 
     return Chem.MolFromSmiles(smiles)
+
+
+def validate_smiles(smiles: str):
+    """
+    Validate a SMILES string.
+
+    Parameters
+    ----------
+    smiles : str
+        Molecular SMILES representation.
+
+    Returns
+    -------
+    bool
+        True if valid molecule.
+    """
+
+    molecule = smiles_to_mol(smiles)
+
+    return molecule is not None

@@ -94,3 +94,31 @@ def predict_batch(
     )
 
     return result
+
+def save_predictions(
+    predictions,
+    output_path,
+):
+    """
+    Save prediction results to CSV.
+
+    Parameters
+    ----------
+    predictions :
+        Prediction dataframe.
+
+    output_path : str
+        Output CSV file path.
+
+    Returns
+    -------
+    str
+        Saved file path.
+    """
+
+    predictions.to_csv(
+        output_path,
+        index=False,
+    )
+
+    return output_path

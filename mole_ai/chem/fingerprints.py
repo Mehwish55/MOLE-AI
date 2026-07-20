@@ -66,3 +66,34 @@ def rank_by_similarity(query_fp, fingerprints):
         similarities,
         reverse=True,
     )
+
+
+def morgan_fingerprint(
+    mol,
+    radius=2,
+    n_bits=2048,
+):
+    """
+    Compatibility wrapper for Morgan fingerprint generation.
+
+    Parameters
+    ----------
+    mol :
+        RDKit molecule object.
+
+    radius :
+        Morgan fingerprint radius.
+
+    n_bits :
+        Fingerprint size.
+
+    Returns
+    -------
+    RDKit fingerprint
+    """
+
+    return generate_morgan_fingerprint(
+        mol,
+        radius,
+        n_bits,
+    )

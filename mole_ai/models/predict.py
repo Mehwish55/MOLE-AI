@@ -122,3 +122,34 @@ def save_predictions(
     )
 
     return output_path
+
+
+def generate_prediction_report(
+    predictions,
+    model_name,
+):
+    """
+    Generate a prediction report table.
+
+    Parameters
+    ----------
+    predictions :
+        Prediction values.
+
+    model_name : str
+        Name of prediction model.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Prediction report.
+    """
+
+    import pandas as pd
+
+    return pd.DataFrame(
+        {
+            "prediction": predictions,
+            "model": model_name,
+        }
+    )

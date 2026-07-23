@@ -1,0 +1,6 @@
+streamlit==1.59.2
+rdkit==2026.3.4
+numpy==2.4.6
+pandas==3.0.3
+scikit-learn==1.9.0
+matplotlib

@@ -1,38 +1,72 @@
 """
-Molecular descriptor calculation utilities.
+Molecular descriptor utilities for MOLE-AI.
 """
 
-from rdkit.Chem import Crippen
 from rdkit.Chem import Descriptors
 from rdkit.Chem import Lipinski
 from rdkit.Chem import rdMolDescriptors
-from rdkit.Chem import rdmolops
 
 
-def calculate_descriptors(mol):
+def get_molecular_properties(mol):
     """
     Calculate molecular descriptors.
 
     Parameters
     ----------
-    mol : rdkit.Chem.Mol
-        RDKit molecule object.
+    mol : RDKit Mol
 
     Returns
     -------
     dict
-        Molecular descriptor values.
+        Dictionary containing molecular properties.
     """
 
-    return {
-        "molecular_weight": Descriptors.MolWt(mol),
-        "logp": Crippen.MolLogP(mol),
-        "hbd": Lipinski.NumHDonors(mol),
-        "hba": Lipinski.NumHAcceptors(mol),
-        "rotatable_bonds": Lipinski.NumRotatableBonds(mol),
-        "tpsa": rdMolDescriptors.CalcTPSA(mol),
-        "heavy_atom_count": mol.GetNumHeavyAtoms(),
-        "aromatic_ring_count": rdMolDescriptors.CalcNumAromaticRings(mol),
-        "fraction_csp3": rdMolDescriptors.CalcFractionCSP3(mol),
-        "formal_charge": rdmolops.GetFormalCharge(mol),
-             }
+    properties = {
+
+        "Formula":
+        rdMolDescriptors.CalcMolFormula(mol),
+
+        "Molecular Weight":
+        round(
+            Descriptors.MolWt(mol),
+            2,
+        ),
+
+        "Exact Molecular Weight":
+        round(
+            Descriptors.ExactMolWt(mol),
+            2,
+        ),
+
+        "LogP":
+        round(
+            Descriptors.MolLogP(mol),
+            2,
+        ),
+
+        "TPSA":
+        round(
+            Descriptors.TPSA(mol),
+            2,
+        ),
+
+        "Heavy Atoms":
+        Descriptors.HeavyAtomCount(mol),
+
+        "Hydrogen Bond Donors":
+        Lipinski.NumHDonors(mol),
+
+        "Hydrogen Bond Acceptors":
+        Lipinski.NumHAcceptors(mol),
+
+        "Rotatable Bonds":
+        Lipinski.NumRotatableBonds(mol),
+
+        "Ring Count":
+        rdMolDescriptors.CalcNumRings(mol),
+
+        "Aromatic Rings":
+        rdMolDescriptors.CalcNumAromaticRings(mol),
+    }
+
+    return properties

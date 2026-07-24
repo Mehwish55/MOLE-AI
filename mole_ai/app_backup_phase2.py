@@ -15,8 +15,6 @@ from mole_ai.chem.smiles import validate_smiles
 from mole_ai.chem.fingerprints import (
     generate_morgan_fingerprint
 )
-import pandas as pd
-import plotly.express as px
 
 
 # ==========================
@@ -119,20 +117,23 @@ st.sidebar.info(
 
 # ==========================
 # Molecular Input
-# =========================
+# ==========================
+
+
 
 # ==========================
 # Application Tabs
 # ==========================
 
-tab1, tab2, tab3, tab4 = st.tabs(
+tab1, tab2, tab3 = st.tabs(
     [
         "🧪 Molecular Analysis",
-        "🧬 Fingerprint Generation",
         "🤖 AI Prediction",
         "📚 About MOLE-AI"
     ]
 )
+
+
 # ==========================
 # Tab 1
 # ==========================
@@ -146,53 +147,34 @@ with tab1:
         placeholder="Example: CCO"
     )
 
-    st.markdown("### 🧪 Example Molecules")
-
-
-    example_molecules = {
-        "Ethanol": "CCO",
-        "Aspirin": "CC(=O)OC1=CC=CC=C1C(=O)O",
-        "Caffeine": "Cn1cnc2n(C)c(=O)n(C)c(=O)c12",
-        "Paracetamol": "CC(=O)NC1=CC=C(C=C1)O",
-        "Ibuprofen": "CC(C)CC1=CC=C(C=C1)C(C)C(=O)O"
-    }
-
-
-    selected_example = st.selectbox(
-        "Choose molecule example",
-        list(example_molecules.keys())
-    )
-
-
-    st.code(
-        example_molecules[selected_example]
-    )
-
     if st.button("🔬 Analyze Molecule"):
+
         if validate_smiles(smiles):
 
             mol = Chem.MolFromSmiles(smiles)
 
             properties = get_molecular_properties(mol)
 
-            st.success("🟢 Valid Molecule")
+            st.success("✅ Valid Molecule")
 
-            left, right = st.columns([1,1])
+            st.divider()
 
-            with left:
+            st.subheader("🧬 Molecular Structure")
 
-                st.subheader("🧬 Molecular Structure")
+            image = Draw.MolToImage(
+                mol,
+                size=(500, 500)
+            )
 
-                image = Draw.MolToImage(
-                    mol,
-                    size=(450,450)
-                )
+            st.image(image)
 
-                st.image(image)
+            st.divider()
 
-            with right:
+            st.subheader("📊 Molecular Properties")
 
-                st.subheader("📊 Molecular Properties")
+            col1, col2 = st.columns(2)
+
+            with col1:
 
                 st.metric(
                     "Formula",
@@ -218,6 +200,8 @@ with tab1:
                     "TPSA",
                     properties["TPSA"]
                 )
+
+            with col2:
 
                 st.metric(
                     "Heavy Atoms",
@@ -246,70 +230,33 @@ with tab1:
 
             st.divider()
 
+            st.subheader("💊 Lipinski Rule of Five")
+
             mw = properties["Molecular Weight"]
             logp = properties["LogP"]
             hbd = properties["Hydrogen Bond Donors"]
             hba = properties["Hydrogen Bond Acceptors"]
 
-            if (
+            lipinski = (
                 mw <= 500 and
                 logp <= 5 and
                 hbd <= 5 and
                 hba <= 10
-            ):
+            )
+
+            if lipinski:
 
                 st.success(
-                    "💊 Lipinski Rule: PASS"
+                    "✅ This molecule satisfies Lipinski's Rule of Five."
                 )
 
             else:
 
                 st.warning(
-                    "⚠️ Lipinski Rule: FAIL"
+                    "⚠️ This molecule violates one or more Lipinski rules."
                 )
 
-            st.subheader("📈 Molecular Profile")
-
-
-            chart_data = pd.DataFrame(
-                {
-                    "Property": [
-                        "Molecular Weight",
-                        "LogP",
-                        "TPSA",
-                        "HBD",
-                        "HBA"
-                    ],
-
-                    "Value": [
-                        properties["Molecular Weight"],
-                        properties["LogP"],
-                        properties["TPSA"],
-                        properties["Hydrogen Bond Donors"],
-                        properties["Hydrogen Bond Acceptors"]
-                    ]
-                }
-            )
-
-
-            fig = px.bar(
-                chart_data,
-                x="Property",
-                y="Value",
-                title="Molecular Descriptor Profile"
-            )
-
-
-            st.plotly_chart(
-                fig,
-                use_container_width=True
-            )
-
-            with st.expander(
-                "🔬 Advanced Molecular Descriptors"
-            ):
-
-                st.table(properties)
+            st.divider()
 
             st.subheader("📄 Molecular Summary")
 
@@ -327,59 +274,9 @@ Status: Ready for AI Prediction 🚀
 """
             )
 
-            st.divider()
-
-            st.subheader("📥 Download Analysis")
-
-            df = pd.DataFrame(
-                list(properties.items()),
-                columns=["Property", "Value"]
-            )
-
-            csv = df.to_csv(index=False)
-
-            st.download_button(
-                label="📥 Download CSV Report",
-                data=csv,
-                file_name="molecule_analysis.csv",
-                mime="text/csv"
-            )
-
-
-            txt_report = f"""
-MOLE-AI Molecular Report
-
-Formula:
-{properties['Formula']}
-
-Molecular Weight:
-{properties['Molecular Weight']}
-
-LogP:
-{properties['LogP']}
-
-TPSA:
-{properties['TPSA']}
-
-Status:
-Ready for AI Prediction 🚀
-"""
-
-
-            st.download_button(
-                label="📄 Download TXT Report",
-                data=txt_report,
-                file_name="molecule_report.txt",
-                mime="text/plain"
-            )
-
         else:
 
-            st.error(
-                "❌ Invalid SMILES"
-            )
-
-
+            st.error("❌ Invalid SMILES")
 # ==========================
 # Tab 2
 # ==========================
@@ -537,25 +434,3 @@ with tab3:
             st.warning(
                 "Please enter a SMILES sequence"
             )
-
-
-# ==========================
-# Footer
-# ==========================
-
-st.divider()
-
-st.markdown(
-"""
-<center>
-
-🧬 <b>MOLE-AI v1.0.0</b><br>
-
-AI-powered molecular intelligence platform<br>
-
-Built with Python | RDKit | Streamlit | Machine Learning
-
-</center>
-""",
-unsafe_allow_html=True
-)

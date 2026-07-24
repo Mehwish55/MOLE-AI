@@ -16,8 +16,6 @@ from mole_ai.chem.fingerprints import (
     generate_morgan_fingerprint
 )
 import pandas as pd
-import plotly.express as px
-
 
 # ==========================
 # MOLE-AI Logo Header
@@ -148,7 +146,6 @@ with tab1:
 
     st.markdown("### 🧪 Example Molecules")
 
-
     example_molecules = {
         "Ethanol": "CCO",
         "Aspirin": "CC(=O)OC1=CC=CC=C1C(=O)O",
@@ -157,18 +154,13 @@ with tab1:
         "Ibuprofen": "CC(C)CC1=CC=C(C=C1)C(C)C(=O)O"
     }
 
+    st.write("Copy an example SMILES:")
 
-    selected_example = st.selectbox(
-        "Choose molecule example",
-        list(example_molecules.keys())
-    )
-
-
-    st.code(
-        example_molecules[selected_example]
-    )
+    for name, smiles_example in example_molecules.items():
+        st.code(f"{name}: {smiles_example}")
 
     if st.button("🔬 Analyze Molecule"):
+
         if validate_smiles(smiles):
 
             mol = Chem.MolFromSmiles(smiles)
@@ -268,43 +260,6 @@ with tab1:
                     "⚠️ Lipinski Rule: FAIL"
                 )
 
-            st.subheader("📈 Molecular Profile")
-
-
-            chart_data = pd.DataFrame(
-                {
-                    "Property": [
-                        "Molecular Weight",
-                        "LogP",
-                        "TPSA",
-                        "HBD",
-                        "HBA"
-                    ],
-
-                    "Value": [
-                        properties["Molecular Weight"],
-                        properties["LogP"],
-                        properties["TPSA"],
-                        properties["Hydrogen Bond Donors"],
-                        properties["Hydrogen Bond Acceptors"]
-                    ]
-                }
-            )
-
-
-            fig = px.bar(
-                chart_data,
-                x="Property",
-                y="Value",
-                title="Molecular Descriptor Profile"
-            )
-
-
-            st.plotly_chart(
-                fig,
-                use_container_width=True
-            )
-
             with st.expander(
                 "🔬 Advanced Molecular Descriptors"
             ):
@@ -343,34 +298,7 @@ Status: Ready for AI Prediction 🚀
                 data=csv,
                 file_name="molecule_analysis.csv",
                 mime="text/csv"
-            )
 
-
-            txt_report = f"""
-MOLE-AI Molecular Report
-
-Formula:
-{properties['Formula']}
-
-Molecular Weight:
-{properties['Molecular Weight']}
-
-LogP:
-{properties['LogP']}
-
-TPSA:
-{properties['TPSA']}
-
-Status:
-Ready for AI Prediction 🚀
-"""
-
-
-            st.download_button(
-                label="📄 Download TXT Report",
-                data=txt_report,
-                file_name="molecule_report.txt",
-                mime="text/plain"
             )
 
         else:
@@ -537,25 +465,3 @@ with tab3:
             st.warning(
                 "Please enter a SMILES sequence"
             )
-
-
-# ==========================
-# Footer
-# ==========================
-
-st.divider()
-
-st.markdown(
-"""
-<center>
-
-🧬 <b>MOLE-AI v1.0.0</b><br>
-
-AI-powered molecular intelligence platform<br>
-
-Built with Python | RDKit | Streamlit | Machine Learning
-
-</center>
-""",
-unsafe_allow_html=True
-)

@@ -94,3 +94,71 @@ def predict_batch(
     )
 
     return result
+from pathlib import Path
+import joblib
+import numpy as np
+
+from rdkit import Chem
+from rdkit.DataStructs import ConvertToNumpyArray
+
+from mole_ai.features.fingerprints import (
+    generate_fingerprint
+)
+
+
+MODEL_PATH = Path(
+    "mole_ai/models/qsar_random_forest.pkl"
+)
+
+import streamlit as st
+
+
+@st.cache_resource
+def load_model():
+
+    model = joblib.load(
+        MODEL_PATH
+    )
+
+    return model
+
+def predict_from_smiles(smiles):
+    """
+    Predict pIC50 directly from SMILES.
+    """
+
+    mol = Chem.MolFromSmiles(
+        smiles
+    )
+
+    if mol is None:
+        return None
+
+
+    fingerprint = generate_fingerprint(
+        mol
+    )
+
+
+    features = np.zeros(
+        (2048,)
+    )
+
+
+    ConvertToNumpyArray(
+        fingerprint,
+        features
+    )
+
+
+    model = load_model()
+
+
+    prediction = model.predict(
+        [features]
+    )
+
+
+    return float(
+        prediction[0]
+    )

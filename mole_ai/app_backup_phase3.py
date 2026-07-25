@@ -15,16 +15,12 @@ from mole_ai.chem.smiles import validate_smiles
 from mole_ai.chem.fingerprints import (
     generate_morgan_fingerprint
 )
-from mole_ai.chem.descriptors import get_molecular_properties
 from mole_ai.models.predict import (
     predict_from_smiles
 )
 import pandas as pd
 import plotly.express as px
 
-if "prediction_history" not in st.session_state:
-
-    st.session_state.prediction_history = []
 
 # ==========================
 # MOLE-AI Logo Header
@@ -451,486 +447,100 @@ with tab2:
             st.error(
                 "❌ Invalid SMILES"
             )
+
 # ==========================
 # Tab 3
+# ==========================
+# ==========================
 # AI Prediction Tab
 # ==========================
 
 with tab3:
 
     st.subheader(
-        "🤖 AI Molecular Activity Prediction"
+        "🤖 AI Molecular Property Prediction"
     )
 
-    st.info(
+
+    st.write(
         """
-        MOLE-AI QSAR Engine
+        MOLE-AI uses machine learning models
+        to predict molecular properties.
 
-        Model:
-        Random Forest Regression
+        Planned prediction modules:
 
-        Features:
-        Morgan Fingerprints (2048 bits)
+        ✓ QSAR activity prediction
 
-        Output:
-        Predicted molecular activity (pIC50)
+        ✓ Molecular property prediction
+
+        ✓ Drug candidate scoring
+
+        ✓ Model-based ranking
         """
     )
 
 
     prediction_smiles = st.text_input(
-        "Enter SMILES molecule",
+        "Enter SMILES for prediction",
         placeholder="Example: CCO",
         key="prediction_input"
     )
 
 
+    model_option = st.selectbox(
+        "Select Prediction Model",
+        [
+            "Random Forest (QSAR)",
+            "Deep Learning Model",
+            "Graph Neural Network",
+            "Transformer Model"
+        ]
+    )
+
+
     if st.button(
-        "🚀 Predict pIC50",
-        key="prediction_button"
+        "🚀 Predict Molecular Property"
     ):
 
         if prediction_smiles:
 
-            prediction = predict_from_smiles(
+            mol = Chem.MolFromSmiles(
                 prediction_smiles
             )
 
 
-            if prediction is not None:
-
+            if mol:
 
                 st.success(
-                    "✅ Prediction completed successfully"
+                    "✅ Molecule ready for prediction"
                 )
 
 
-                st.session_state.prediction_history.append(
-                    {
-                        "SMILES": prediction_smiles,
-                        "Predicted pIC50": round(
-                            prediction,
-                            3
-                        )
-                    }
+                st.info(
+                    f"""
+                    Selected Model:
+
+                    {model_option}
+
+
+                    Prediction engine will be connected
+                    with trained MOLE-AI models.
+                    """
                 )
-
-
-                st.divider()
-
-
-                col1, col2 = st.columns(
-                    2
-                )
-
-
-                with col1:
-
-                    st.subheader(
-                        "🧬 Molecular Structure"
-                    )
-
-
-                    mol = Chem.MolFromSmiles(
-                        prediction_smiles
-                    )
-
-
-                    if mol:
-
-                        image = Draw.MolToImage(
-                            mol,
-                            size=(350,350)
-                        )
-
-                        st.image(
-                            image,
-                            caption="2D Structure"
-                        )
-
-
-                with col2:
-
-                    st.subheader(
-                        "🤖 Prediction Result"
-                    )
-
-
-                    st.metric(
-                        "Predicted pIC50",
-                        f"{prediction:.3f}"
-                    )
-
-
-                    if prediction >= 7:
-
-                        activity = "High Activity"
-
-                        score = 90
-
-
-                    elif prediction >= 5:
-
-                        activity = "Moderate Activity"
-
-                        score = 70
-
-
-                    else:
-
-                        activity = "Low Activity"
-
-                        score = 40
-
-
-
-                    st.write(
-                        "### Activity Classification"
-                    )
-
-
-                    st.success(
-                        activity
-                    )
-
-
-                    st.progress(
-                        score / 100
-                    )
-
-
-                    st.write(
-                        f"Candidate Score: {score}%"
-                    )
-
-
-
-                st.divider()
-
-
-                st.subheader(
-                    "🧪 Molecular Properties"
-                )
-
-
-                mol = Chem.MolFromSmiles(
-                    prediction_smiles
-                )
-
-
-                if mol:
-
-                    properties = get_molecular_properties(
-                        mol
-                    )
-
-                    st.table(
-                        properties
-                    )
-
-
-
-                st.divider()
-
-
-                st.subheader(
-                    "📜 Prediction History"
-                )
-
-
-                history_df = pd.DataFrame(
-                    st.session_state.prediction_history
-                )
-
-
-                st.dataframe(
-                    history_df,
-                    use_container_width=True
-                )
-
-
-                st.download_button(
-                    "⬇️ Download Predictions",
-                    history_df.to_csv(
-                        index=False
-                    ),
-                    "mole_ai_predictions.csv",
-                    "text/csv"
-                )
-
-
-
-                st.divider()
-
-
-                st.subheader(
-                    "🧠 AI Interpretation"
-                )
-
-
-                if prediction >= 7:
-
-                    st.success(
-                        """
-                        This molecule shows strong predicted activity.
-
-                        Recommended next steps:
-
-                        ✓ Molecular docking
-
-                        ✓ ADMET analysis
-
-                        ✓ Toxicity evaluation
-
-                        ✓ Experimental validation
-                        """
-                    )
-
-
-                elif prediction >= 5:
-
-                    st.info(
-                        """
-                        This molecule shows moderate predicted activity.
-
-                        Optimization of molecular properties may improve performance.
-                        """
-                    )
-
-
-                else:
-
-                    st.warning(
-                        """
-                        This molecule shows lower predicted activity.
-
-                        Structural optimization may be required.
-                        """
-                    )
 
 
             else:
 
                 st.error(
-                    "❌ Invalid SMILES or prediction failed"
+                    "❌ Invalid SMILES"
                 )
-
 
         else:
 
             st.warning(
-                "Please enter a SMILES molecule"
+                "Please enter a SMILES sequence"
             )
-# ==========================
-# Tab 4
-# About MOLE-AI
-# ==========================
 
-with tab4:
-
-    st.subheader(
-        "📚 About MOLE-AI"
-    )
-
-
-    st.markdown(
-        """
-# 🧬 MOLE-AI
-
-**An open-source AI-powered molecular intelligence toolkit
-for computational drug discovery.**
-
-MOLE-AI combines molecular informatics,
-machine learning, and cheminformatics to support
-early-stage drug discovery workflows.
-        """
-    )
-
-
-    st.divider()
-
-
-    st.subheader(
-        "🚀 AI Drug Discovery Workflow"
-    )
-
-
-    st.code(
-        """
-SMILES Input
-      |
-      ↓
-RDKit Molecular Processing
-      |
-      ↓
-Morgan Fingerprint Generation
-      |
-      ↓
-Random Forest QSAR Model
-      |
-      ↓
-pIC50 Activity Prediction
-      |
-      ↓
-Candidate Prioritization
-        """
-    )
-
-
-    st.divider()
-
-
-    st.subheader(
-        "✨ Core Features"
-    )
-
-
-    col1, col2 = st.columns(2)
-
-
-    with col1:
-
-        st.info(
-            """
-🧪 Molecular Analysis
-
-• Molecular descriptors
-
-• Lipinski properties
-
-• Drug-like evaluation
-            """
-        )
-
-
-        st.success(
-            """
-🧬 Fingerprint Generation
-
-• Morgan fingerprints
-
-• 2048-bit molecular features
-            """
-        )
-
-
-    with col2:
-
-        st.warning(
-            """
-🤖 QSAR Prediction
-
-• Random Forest regression
-
-• pIC50 prediction
-            """
-        )
-
-
-        st.success(
-            """
-📊 Machine Learning Stack
-
-• Python
-
-• RDKit
-
-• Scikit-learn
-
-• Streamlit
-            """
-        )
-
-
-    st.divider()
-
-
-    st.subheader(
-        "🛠 Technology Stack"
-    )
-
-
-    st.table(
-        {
-            "Component": [
-                "Programming",
-                "Chemistry",
-                "Machine Learning",
-                "Data Processing",
-                "Interface"
-            ],
-
-            "Technology": [
-                "Python",
-                "RDKit",
-                "Scikit-learn",
-                "Pandas / NumPy",
-                "Streamlit"
-            ]
-        }
-    )
-
-
-    st.divider()
-
-
-    st.subheader(
-        "🗺 Development Roadmap"
-    )
-
-
-    st.markdown(
-        """
-### Version 1.0 ✅
-
-✓ Molecular Analysis
-
-✓ Fingerprint Generation
-
-✓ QSAR Prediction
-
-
-### Version 2.0 🚀
-
-○ ADMET Prediction
-
-○ Toxicity Prediction
-
-○ Molecular Docking
-
-
-### Version 3.0 🔬
-
-○ Deep Learning Models
-
-○ Generative AI Molecule Design
-
-○ Multi-objective Optimization
-        """
-    )
-
-
-    st.divider()
-
-
-    st.subheader(
-        "👩‍🔬 Project Information"
-    )
-
-
-    st.markdown(
-        """
-**MOLE-AI v1.0.0**
-
-AI-powered molecular intelligence platform.
-
-Built with:
-
-Python | RDKit | Machine Learning | Streamlit
-
-Designed for computational drug discovery research.
-        """
-    )
 
 # ==========================
 # Footer

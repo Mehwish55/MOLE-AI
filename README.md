@@ -36,7 +36,23 @@ The project combines **cheminformatics**, **machine learning**, **deep learning*
 The primary goal of MOLE-AI is to provide researchers, students, and developers with an extensible toolkit for molecular analysis and predictive modeling while promoting reproducible and open scientific research.
 
 ---
+# 🌐 Interactive Web Application
 
+MOLE-AI includes a Streamlit-based interface for molecular analysis and AI prediction.
+
+Current capabilities:
+
+✅ SMILES-based molecular analysis  
+✅ Molecular fingerprint generation  
+✅ QSAR-based pIC50 prediction  
+✅ Molecular structure visualization  
+✅ Prediction history export  
+
+
+Launch locally:
+
+```bash
+streamlit run mole_ai/app.py
 # Key Highlights
 
 - 🧬 Molecular preprocessing using RDKit
@@ -82,11 +98,120 @@ The first stable release includes a complete molecular processing pipeline cover
 - Automated testing
 
 ---
+# 📸 Web Interface Screenshots
+
+MOLE-AI provides an interactive Streamlit interface for molecular analysis and AI-based property prediction.
+
+## 🧪 Molecular Analysis
+
+![Molecular Analysis](docs/screenshots/molecular_analysis.png)
+
+
+## 🧬 Fingerprint Generation
+
+![Fingerprint Generation](docs/screenshots/fingerprint.png)
+
+
+## 🤖 AI Prediction
+
+![AI Prediction](docs/screenshots/prediction.png)
+
+
+## 📚 About MOLE-AI
+
+![About MOLE-AI](docs/screenshots/about.png)
+
 # 🚀 Features
 
 MOLE-AI provides a modular collection of tools for molecular analysis, machine learning, and AI-assisted drug discovery.
 
 ---
+
+# 🖥️ Streamlit Application Features
+
+MOLE-AI includes an interactive Streamlit web application for molecular analysis and AI-based molecular property prediction.
+
+The interface is organized into four main modules:
+
+---
+
+## 🧪 Tab 1 — Molecular Analysis
+
+Analyze molecules directly from SMILES input.
+
+Features:
+
+- SMILES validation using RDKit
+- Molecular structure visualization
+- Molecular descriptors calculation
+- Drug-likeness properties
+- Lipinski rule analysis
+
+---
+
+## 🧬 Tab 2 — Fingerprint Generation
+
+Generate molecular fingerprints for machine learning applications.
+
+Features:
+
+- Morgan fingerprint generation
+- 2048-bit molecular representation
+- Active fingerprint bit visualization
+- Chemical feature encoding
+
+---
+
+## 🤖 Tab 3 — AI Molecular Prediction
+
+Predict molecular activity using the integrated QSAR machine learning model.
+
+## 📚 Tab 4 — About MOLE-AI
+
+Provides an overview of the MOLE-AI platform, including its scientific workflow, technology stack, and future development roadmap.
+
+Includes:
+
+- 🧬 AI-driven drug discovery workflow
+- 🧪 Cheminformatics and machine learning pipeline overview
+- 🛠 Technology stack information
+- 📊 Project architecture overview
+- 🗺 Future development roadmap
+
+The About section summarizes how MOLE-AI integrates:
+
+Molecular Input
+↓
+RDKit Processing
+↓
+Molecular Features
+↓
+Machine Learning Models
+↓
+Property Prediction
+↓
+Drug Discovery Insights
+
+Features:
+
+- Random Forest regression model
+- Morgan fingerprint-based prediction
+- pIC50 activity prediction
+- Candidate activity classification
+- Prediction history tracking
+- CSV export of predictions
+
+Workflow:
+
+SMILES
+↓
+RDKit Molecular Processing
+↓
+Morgan Fingerprint (2048 bits)
+↓
+Random Forest QSAR Model
+↓
+Predicted pIC50
 
 # 🧬 Cheminformatics
 
@@ -114,6 +239,39 @@ MOLE-AI provides a modular collection of tools for molecular analysis, machine l
 | ✅ Model Registry | Save and manage trained models | ✔ |
 
 ---
+
+# 🤖 QSAR Model
+
+Current prediction engine:
+
+| Component | Description |
+|---|---|
+| Algorithm | Random Forest Regression |
+| Input Features | 2048-bit Morgan Fingerprints |
+| Prediction | pIC50 Activity |
+| Chemistry Engine | RDKit |
+| Model Type | Supervised Machine Learning |
+
+
+Workflow:
+
+SMILES
+
+↓
+
+RDKit Molecular Processing
+
+↓
+
+Morgan Fingerprint
+
+↓
+
+Random Forest Model
+
+↓
+
+Predicted pIC50
 
 # 🧠 Deep Learning
 

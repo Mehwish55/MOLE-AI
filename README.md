@@ -99,28 +99,29 @@ The first stable release includes a complete molecular processing pipeline cover
 - Automated testing
 
 ---
+
 # 📸 Web Interface Screenshots
 
 MOLE-AI provides an interactive Streamlit interface for molecular analysis and AI-based property prediction.
 
 ## 🧪 Molecular Analysis
 
-![Molecular Analysis](docs/screenshots/molecular_analysis.png)
+![Molecular Analysis](docs/screenshots/Molecular%20analysis%20png.PNG)
 
 
 ## 🧬 Fingerprint Generation
 
-![Fingerprint Generation](docs/screenshots/fingerprint.png)
+![Fingerprint Generation](docs/screenshots/Fingerprinting.png)
 
 
 ## 🤖 AI Prediction
 
-![AI Prediction](docs/screenshots/prediction.png)
+![AI Prediction](docs/screenshots/AI%20prediction.png)
 
 
 ## 📚 About MOLE-AI
 
-![About MOLE-AI](docs/screenshots/about.png)
+![About MOLE-AI](docs/screenshots/AI%20model.png)
 
 # 🚀 Features
 

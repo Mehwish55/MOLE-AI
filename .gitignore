@@ -3,6 +3,10 @@ __pycache__/
 *.py[cod]
 *.pyo
 
+# Python package build files
+mole_ai.egg-info/
+*.egg-info/
+
 # Virtual environments
 .venv/
 venv/

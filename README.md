@@ -99,29 +99,77 @@ The first stable release includes a complete molecular processing pipeline cover
 - Automated testing
 
 ---
-
 # 📸 Web Interface Screenshots
 
-MOLE-AI provides an interactive Streamlit interface for molecular analysis and AI-based property prediction.
+MOLE-AI provides an interactive **Streamlit-based web application** for molecular analysis, fingerprint generation, AI-based molecular property prediction, and platform information.
 
-## 🧪 Molecular Analysis
+The application contains four main modules:
 
-![Molecular Analysis](docs/screenshots/Molecular%20analysis%20png.PNG)
+---
 
+## 🧪 Tab 1 — Molecular Analysis
 
-## 🧬 Fingerprint Generation
+The Molecular Analysis module allows users to analyze molecules directly from SMILES input.
 
-![Fingerprint Generation](docs/screenshots/Fingerprinting.png)
+Features:
 
+- ✅ SMILES validation using RDKit
+- ✅ Molecular structure visualization
+- ✅ Physicochemical property calculation
+- ✅ Molecular descriptor analysis
+- ✅ Drug-likeness evaluation
 
-## 🤖 AI Prediction
+Screenshot:
 
-![AI Prediction](docs/screenshots/AI%20prediction.png)
+![Molecular Analysis](docs/screenshots/molecular_analysis.png)
 
+---
 
-## 📚 About MOLE-AI
+## 🧬 Tab 2 — Fingerprint Generation
 
-![About MOLE-AI](docs/screenshots/AI%20model.png)
+The Fingerprint Generation module converts molecules into machine-learning-ready molecular representations.
+
+Features:
+
+- ✅ Morgan fingerprint generation
+- ✅ 2048-bit molecular fingerprints
+- ✅ Molecular feature encoding
+- ✅ Visualization of active fingerprint bits
+
+Screenshot:
+
+![Fingerprint Generation](docs/screenshots/fingerprint.png)
+
+---
+---
+
+## 🤖 Tab 3 — AI Molecular Prediction
+
+The AI Prediction module uses a QSAR machine learning model to estimate molecular activity.
+
+Current prediction workflow:
+
+```text
+SMILES Input
+      ↓
+RDKit Molecular Processing
+      ↓
+Morgan Fingerprint Generation
+      ↓
+Random Forest QSAR Model
+      ↓
+Predicted pIC50 Activity
+
+Features:
+
+✅ Random Forest regression model
+✅ Morgan fingerprint-based prediction
+✅ pIC50 activity prediction
+✅ Activity interpretation
+✅ Prediction history tracking
+✅ CSV export capability
+
+Screenshot:
 
 # 🚀 Features
 

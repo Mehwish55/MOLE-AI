@@ -4,6 +4,7 @@ Streamlit web interface for MOLE-AI.
 
 import streamlit as st
 from pathlib import Path
+from datetime import datetime
 
 from rdkit import Chem
 from rdkit.Chem import Descriptors
@@ -890,6 +891,98 @@ with tab4:
                     characteristics and may require optimization.
                     """
                 )
+            st.divider()
+
+            st.subheader("📄 Download ADMET Report")
+
+
+            report = f"""
+MOLE-AI Drug Discovery Report
+============================
+
+Generated:
+{datetime.now()}
+
+
+SMILES:
+{smiles_admet}
+
+
+Molecular Properties
+--------------------
+
+Molecular Weight:
+{results['Molecular Weight']} Da
+
+LogP:
+{results['LogP']}
+
+H Bond Donors:
+{results['H Bond Donors']}
+
+H Bond Acceptors:
+{results['H Bond Acceptors']}
+
+TPSA:
+{results['TPSA']}
+
+Aromatic Rings:
+{results['Aromatic Rings']}
+
+
+Lipinski Rule of Five
+---------------------
+
+{lipinski_check(results)}
+
+
+ADMET Score
+-----------
+
+{score}/100
+
+
+AI Interpretation
+-----------------
+
+"""
+
+
+            if score >= 80:
+
+                report += """
+Excellent drug-like profile.
+
+The molecule shows favorable physicochemical
+properties and may be suitable for further
+experimental validation.
+"""
+
+
+            elif score >= 60:
+
+                report += """
+Moderate drug-like profile.
+
+Optimization may improve drug potential.
+"""
+
+
+            else:
+
+                report += """
+Poor drug-like profile.
+
+Structural optimization may be required.
+"""
+
+
+            st.download_button(
+                label="⬇️ Download ADMET Report",
+                data=report,
+                file_name="MOLE_AI_ADMET_Report.txt",
+                mime="text/plain"
+            )
 
 
             st.divider()

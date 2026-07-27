@@ -19,8 +19,6 @@ from mole_ai.chem.descriptors import get_molecular_properties
 from mole_ai.models.predict import (
     predict_from_smiles
 )
-from mole_ai.admet import calculate_admet, lipinski_check, admet_score
-import matplotlib.pyplot as plt
 import pandas as pd
 import plotly.express as px
 
@@ -138,12 +136,11 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs(
     [
         "🧪 Molecular Analysis",
         "🧬 Fingerprint Generation",
-        "🤖 AI Prediction",
+        "🤖 AI Prediction"
         "💊 ADMET Analysis",
         "📚 About MOLE-AI"
     ]
 )
-
 # ==========================
 # Tab 1
 # ==========================
@@ -726,19 +723,14 @@ with tab3:
                 "Please enter a SMILES molecule"
             )
 
-# ==========================
-# Tab 4
-# ADMET ANALYSIS
-# =========================
 with tab4:
 
     st.header("💊 ADMET Analysis")
 
     st.write(
         """
-        Evaluate molecular absorption, distribution, metabolism,
-        excretion, and toxicity (ADMET) properties using
-        molecular descriptors and drug-likeness rules.
+        Evaluate molecular properties, drug-likeness,
+        and pharmacokinetic characteristics.
         """
     )
 
@@ -751,223 +743,130 @@ with tab4:
 
     if st.button("Analyze ADMET"):
 
+        results = calculate_admet(smiles_admet)
+
+
+        if results:
+
+            st.subheader("🧬 Molecular Properties")
+
+            for key, value in results.items():
+
+                st.metric(
+                    key,
+                    value
+                )
+
+
+            st.subheader("💊 Lipinski Drug-likeness")
+
+            st.success(
+                lipinski_check(results)
+            )
+
+
+            st.subheader("🔬 AI Interpretation")
+
+
+            if (
+                results["Molecular Weight"] < 500
+                and results["LogP"] < 5
+                and results["TPSA"] < 140
+            ):
+
+                st.success(
+                    "Good drug-like properties detected. "
+                    "Molecule shows acceptable ADMET characteristics."
+                )
+
+            else:
+
+                st.warning(
+                    "Some properties may affect drug-likeness."
+                )
+
+        else:
+
+            st.error(
+                "Invalid SMILES. Please enter a valid molecule."
+            )
+
+# ==========================
+# Tab 5
+# About MOLE-AI
+with tab4:
+
+    st.header("💊 ADMET Analysis")
+
+    st.write(
+        """
+        Evaluate molecular properties, drug-likeness,
+        and pharmacokinetic characteristics.
+        """
+    )
+
+
+    smiles_admet = st.text_input(
+        "Enter SMILES for ADMET analysis",
+        value="CC(=O)OC1=CC=CC=C1C(=O)O"
+    )
+
+
+    if st.button("Analyze ADMET"):
 
         results = calculate_admet(smiles_admet)
 
 
         if results:
 
-
             st.subheader("🧬 Molecular Properties")
 
-
-            col1, col2, col3 = st.columns(3)
-
-
-            with col1:
+            for key, value in results.items():
 
                 st.metric(
-                    "Molecular Weight",
-                    f"{results['Molecular Weight']} Da"
-                )
-
-                st.metric(
-                    "LogP",
-                    results["LogP"]
+                    key,
+                    value
                 )
 
 
-            with col2:
+            st.subheader("💊 Lipinski Drug-likeness")
 
-                st.metric(
-                    "H Bond Donors",
-                    results["H Bond Donors"]
-                )
-
-                st.metric(
-                    "H Bond Acceptors",
-                    results["H Bond Acceptors"]
-                )
-
-
-            with col3:
-
-                st.metric(
-                    "TPSA",
-                    results["TPSA"]
-                )
-
-                st.metric(
-                    "Aromatic Rings",
-                    results["Aromatic Rings"]
-                )
-
-
-            st.divider()
-
-
-            st.subheader("💊 ADMET Drug-likeness Score")
-
-
-            score = admet_score(results)
-
-
-            st.metric(
-                "Overall ADMET Score",
-                f"{score}/100"
-            )
-
-
-            if score >= 80:
-
-                st.success(
-                    "Excellent drug-like profile ✅"
-                )
-
-
-            elif score >= 60:
-
-                st.warning(
-                    "Moderate drug-like profile ⚠️"
-                )
-
-
-            else:
-
-                st.error(
-                    "Poor drug-like profile ❌"
-                )
-
-
-            st.divider()
-
-
-            st.subheader("📋 Lipinski Rule of Five")
-
-
-            st.info(
+            st.success(
                 lipinski_check(results)
             )
 
 
-            st.divider()
+            st.subheader("🔬 AI Interpretation")
 
 
-            st.subheader("🧠 AI Interpretation")
+            if (
+                results["Molecular Weight"] < 500
+                and results["LogP"] < 5
+                and results["TPSA"] < 140
+            ):
 
-
-            if score >= 80:
-
-                st.write(
-                    """
-                    This molecule shows favorable ADMET characteristics.
-
-                    ✔ Suitable molecular weight
-                    ✔ Acceptable lipophilicity
-                    ✔ Good hydrogen bonding properties
-
-                    Recommendation:
-                    Candidate for further experimental validation.
-                    """
+                st.success(
+                    "Good drug-like properties detected. "
+                    "Molecule shows acceptable ADMET characteristics."
                 )
-
-
-            elif score >= 60:
-
-                st.write(
-                    """
-                    This molecule has acceptable properties,
-                    but optimization may improve drug potential.
-                    """
-                )
-
 
             else:
 
-                st.write(
-                    """
-                    This molecule shows unfavorable ADMET
-                    characteristics and may require optimization.
-                    """
+                st.warning(
+                    "Some properties may affect drug-likeness."
                 )
-
-
-            st.divider()
-
-
-            st.subheader("📊 ADMET Property Profile")
-
-
-            admet_values = {
-
-                "Molecular Weight":
-                    results["Molecular Weight"],
-
-                "LogP":
-                    results["LogP"],
-
-                "HBD":
-                    results["H Bond Donors"],
-
-                "HBA":
-                    results["H Bond Acceptors"],
-
-                "TPSA":
-                    results["TPSA"],
-
-                "Aromatic Rings":
-                    results["Aromatic Rings"]
-
-            }
-
-
-            fig, ax = plt.subplots(
-                figsize=(8,4)
-            )
-
-
-            ax.bar(
-                admet_values.keys(),
-                admet_values.values()
-            )
-
-
-            ax.set_ylabel(
-                "Value"
-            )
-
-
-            ax.set_title(
-                "Molecular ADMET Properties"
-            )
-
-
-            plt.xticks(
-                rotation=45,
-                ha="right"
-            )
-
-
-            st.pyplot(fig)
-
 
         else:
 
             st.error(
-                "Invalid SMILES. Please enter a valid molecular structure."
-            )
+                "Invalid SMILES. Please enter a valid molecule."
+            )# ==========================
 
-# ==========================
-# Tab 5
-# About MOLE-AI
-# ==========================
-
-with tab5:
+with tab4:
 
     st.subheader(
         "📚 About MOLE-AI"
     )
-
 
     st.markdown(
         """

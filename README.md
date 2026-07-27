@@ -173,11 +173,15 @@ Features:
 ✅ Prediction history tracking
 ✅ CSV export capability
 
+**Screenshot**
+
+![AI Prediction](docs/screenshots/prediction.png)
+
 ## 📚 Tab 4 — About MOLE-AI
 
 Provides an overview of the MOLE-AI platform, including its scientific workflow, technology stack, and future development roadmap.
 
-Includes:
+Features:
 
 - 🧬 AI-driven drug discovery workflow
 - 🧪 Cheminformatics and machine learning pipeline overview
@@ -199,26 +203,9 @@ Property Prediction
 ↓
 Drug Discovery Insights
 
-Features:
+**Screenshot**
 
-- Random Forest regression model
-- Morgan fingerprint-based prediction
-- pIC50 activity prediction
-- Candidate activity classification
-- Prediction history tracking
-- CSV export of predictions
-
-Workflow:
-
-SMILES
-↓
-RDKit Molecular Processing
-↓
-Morgan Fingerprint (2048 bits)
-↓
-Random Forest QSAR Model
-↓
-Predicted pIC50
+![About MOLE-AI](docs/screenshots/about.png)
 
 # 🧬 Cheminformatics
 

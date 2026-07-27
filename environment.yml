@@ -16,6 +16,7 @@ dependencies:
   - pytorch
   - pip
   - pip:
+      - plotly==6.3.0
       - deepchem
       - pytest
       - black

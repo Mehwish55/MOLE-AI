@@ -10,9 +10,8 @@ requires-python = ">=3.11"
 dependencies = [
     "pandas",
 ]
-
-[tool.setuptools]
-packages = ["mole_ai"]
+[tool.setuptools.packages.find]
+include = ["mole_ai*"]
 
 [tool.setuptools.package-data]
 mole_ai = ["**/*"]

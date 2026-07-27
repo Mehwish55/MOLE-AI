@@ -53,7 +53,7 @@ Launch locally:
 
 ```bash
 streamlit run mole_ai/app.py
-
+```
 # Key Highlights
 
 - 🧬 Molecular preprocessing using RDKit
@@ -98,79 +98,6 @@ The first stable release includes a complete molecular processing pipeline cover
 - Documentation
 - Automated testing
 
----
-# 📸 Web Interface Screenshots
-
-MOLE-AI provides an interactive **Streamlit-based web application** for molecular analysis, fingerprint generation, AI-based molecular property prediction, and platform information.
-
-The application contains four main modules:
-
----
-
-## 🧪 Tab 1 — Molecular Analysis
-
-The Molecular Analysis module allows users to analyze molecules directly from SMILES input.
-
-Features:
-
-- ✅ SMILES validation using RDKit
-- ✅ Molecular structure visualization
-- ✅ Physicochemical property calculation
-- ✅ Molecular descriptor analysis
-- ✅ Drug-likeness evaluation
-
-Screenshot:
-
-![Molecular Analysis](docs/screenshots/molecular_analysis.png)
-
----
-
-## 🧬 Tab 2 — Fingerprint Generation
-
-The Fingerprint Generation module converts molecules into machine-learning-ready molecular representations.
-
-Features:
-
-- ✅ Morgan fingerprint generation
-- ✅ 2048-bit molecular fingerprints
-- ✅ Molecular feature encoding
-- ✅ Visualization of active fingerprint bits
-
-Screenshot:
-
-![Fingerprint Generation](docs/screenshots/fingerprint.png)
-
----
----
-
-## 🤖 Tab 3 — AI Molecular Prediction
-
-The AI Prediction module uses a QSAR machine learning model to estimate molecular activity.
-
-Current prediction workflow:
-
-```text
-SMILES Input
-      ↓
-RDKit Molecular Processing
-      ↓
-Morgan Fingerprint Generation
-      ↓
-Random Forest QSAR Model
-      ↓
-Predicted pIC50 Activity
-
-Features:
-
-✅ Random Forest regression model
-✅ Morgan fingerprint-based prediction
-✅ pIC50 activity prediction
-✅ Activity interpretation
-✅ Prediction history tracking
-✅ CSV export capability
-
-Screenshot:
-
 # 🚀 Features
 
 MOLE-AI provides a modular collection of tools for molecular analysis, machine learning, and AI-assisted drug discovery.
@@ -196,25 +123,55 @@ Features:
 - Molecular descriptors calculation
 - Drug-likeness properties
 - Lipinski rule analysis
+  
+Screenshot:
 
+![Molecular Analysis](docs/screenshots/molecular_analysis.png)
 ---
 
 ## 🧬 Tab 2 — Fingerprint Generation
 
-Generate molecular fingerprints for machine learning applications.
+The Fingerprint Generation module converts molecules into machine-learning-ready molecular representations.
 
 Features:
 
-- Morgan fingerprint generation
-- 2048-bit molecular representation
-- Active fingerprint bit visualization
-- Chemical feature encoding
+- ✅ Morgan fingerprint generation
+- ✅ 2048-bit molecular fingerprints
+- ✅ Molecular feature encoding
+- ✅ Visualization of active fingerprint bits
+
+Screenshot:
+
+![Fingerprint Generation](docs/screenshots/fingerprint.png)
 
 ---
 
 ## 🤖 Tab 3 — AI Molecular Prediction
 
-Predict molecular activity using the integrated QSAR machine learning model.
+The AI Prediction module uses a QSAR machine learning model to estimate molecular activity.
+
+Current prediction workflow:
+```
+  text
+SMILES Input
+      ↓
+RDKit Molecular Processing
+      ↓
+Morgan Fingerprint Generation
+      ↓
+Random Forest QSAR Model
+      ↓
+Predicted pIC50 Activity
+```
+
+Features:
+
+✅ Random Forest regression model
+✅ Morgan fingerprint-based prediction
+✅ pIC50 activity prediction
+✅ Activity interpretation
+✅ Prediction history tracking
+✅ CSV export capability
 
 ## 📚 Tab 4 — About MOLE-AI
 

@@ -148,249 +148,40 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs(
 # ==========================
 # Tab 1
 # ==========================
-
 with tab1:
 
     st.subheader("🧪 Molecular Analysis")
 
+    st.success("Tab loaded successfully!")
+
     smiles = st.text_input(
         "Enter SMILES molecule",
-        placeholder="Example: CCO"
+        value="CCO"
     )
 
-    st.markdown("### 🧪 Example Molecules")
+    st.write("Current SMILES:")
+    st.write(smiles)
 
+if st.button("🔬 Analyze Molecule"):
 
-    example_molecules = {
-        "Ethanol": "CCO",
-        "Aspirin": "CC(=O)OC1=CC=CC=C1C(=O)O",
-        "Caffeine": "Cn1cnc2n(C)c(=O)n(C)c(=O)c12",
-        "Paracetamol": "CC(=O)NC1=CC=C(C=C1)O",
-        "Ibuprofen": "CC(C)CC1=CC=C(C=C1)C(C)C(=O)O"
-    }
+    st.write("STEP 1")
 
+    mol = Chem.MolFromSmiles(smiles)
 
-    selected_example = st.selectbox(
-        "Choose molecule example",
-        list(example_molecules.keys())
-    )
+    st.write("STEP 2")
 
+    if mol is not None:
+        st.success("Valid molecule")
 
-    st.code(
-        example_molecules[selected_example]
-    )
+        image = Draw.MolToImage(
+            mol,
+            size=(450,450)
+        )
 
-    if st.button("🔬 Analyze Molecule"):
-        if validate_smiles(smiles):
+        st.image(image)
 
-            mol = Chem.MolFromSmiles(smiles)
-
-            properties = get_molecular_properties(mol)
-
-            st.success("🟢 Valid Molecule")
-
-            left, right = st.columns([1,1])
-
-            with left:
-
-                st.subheader("🧬 Molecular Structure")
-
-                image = Draw.MolToImage(
-                    mol,
-                    size=(450,450)
-                )
-
-                st.image(image)
-
-            with right:
-
-                st.subheader("📊 Molecular Properties")
-
-                st.metric(
-                    "Formula",
-                    properties["Formula"]
-                )
-
-                st.metric(
-                    "Molecular Weight",
-                    properties["Molecular Weight"]
-                )
-
-                st.metric(
-                    "Exact Weight",
-                    properties["Exact Molecular Weight"]
-                )
-
-                st.metric(
-                    "LogP",
-                    properties["LogP"]
-                )
-
-                st.metric(
-                    "TPSA",
-                    properties["TPSA"]
-                )
-
-                st.metric(
-                    "Heavy Atoms",
-                    properties["Heavy Atoms"]
-                )
-
-                st.metric(
-                    "H-Bond Donors",
-                    properties["Hydrogen Bond Donors"]
-                )
-
-                st.metric(
-                    "H-Bond Acceptors",
-                    properties["Hydrogen Bond Acceptors"]
-                )
-
-                st.metric(
-                    "Rotatable Bonds",
-                    properties["Rotatable Bonds"]
-                )
-
-                st.metric(
-                    "Ring Count",
-                    properties["Ring Count"]
-                )
-
-            st.divider()
-
-            mw = properties["Molecular Weight"]
-            logp = properties["LogP"]
-            hbd = properties["Hydrogen Bond Donors"]
-            hba = properties["Hydrogen Bond Acceptors"]
-
-            if (
-                mw <= 500 and
-                logp <= 5 and
-                hbd <= 5 and
-                hba <= 10
-            ):
-
-                st.success(
-                    "💊 Lipinski Rule: PASS"
-                )
-
-            else:
-
-                st.warning(
-                    "⚠️ Lipinski Rule: FAIL"
-                )
-
-            st.subheader("📈 Molecular Profile")
-
-
-            chart_data = pd.DataFrame(
-                {
-                    "Property": [
-                        "Molecular Weight",
-                        "LogP",
-                        "TPSA",
-                        "HBD",
-                        "HBA"
-                    ],
-
-                    "Value": [
-                        properties["Molecular Weight"],
-                        properties["LogP"],
-                        properties["TPSA"],
-                        properties["Hydrogen Bond Donors"],
-                        properties["Hydrogen Bond Acceptors"]
-                    ]
-                }
-            )
-
-
-            fig = px.bar(
-                chart_data,
-                x="Property",
-                y="Value",
-                title="Molecular Descriptor Profile"
-            )
-
-
-            st.plotly_chart(
-                fig,
-                use_container_width=True
-            )
-
-            with st.expander(
-                "🔬 Advanced Molecular Descriptors"
-            ):
-
-                st.table(properties)
-
-            st.subheader("📄 Molecular Summary")
-
-            st.info(
-                f"""
-Formula: {properties['Formula']}
-
-Molecular Weight: {properties['Molecular Weight']}
-
-LogP: {properties['LogP']}
-
-TPSA: {properties['TPSA']}
-
-Status: Ready for AI Prediction 🚀
-"""
-            )
-
-            st.divider()
-
-            st.subheader("📥 Download Analysis")
-
-            df = pd.DataFrame(
-                list(properties.items()),
-                columns=["Property", "Value"]
-            )
-
-            csv = df.to_csv(index=False)
-
-            st.download_button(
-                label="📥 Download CSV Report",
-                data=csv,
-                file_name="molecule_analysis.csv",
-                mime="text/csv"
-            )
-
-
-            txt_report = f"""
-MOLE-AI Molecular Report
-
-Formula:
-{properties['Formula']}
-
-Molecular Weight:
-{properties['Molecular Weight']}
-
-LogP:
-{properties['LogP']}
-
-TPSA:
-{properties['TPSA']}
-
-Status:
-Ready for AI Prediction 🚀
-"""
-
-
-            st.download_button(
-                label="📄 Download TXT Report",
-                data=txt_report,
-                file_name="molecule_report.txt",
-                mime="text/plain"
-            )
-
-        else:
-
-            st.error(
-                "❌ Invalid SMILES"
-            )
-
+    else:
+        st.error("Invalid SMILES")
 
 # ==========================
 # Tab 2

@@ -147,42 +147,294 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs(
 
 # ==========================
 # Tab 1
+# Molecular Analysis
 # ==========================
+
 with tab1:
 
     st.subheader("🧪 Molecular Analysis")
 
-    st.success("Tab loaded successfully!")
-
     smiles = st.text_input(
         "Enter SMILES molecule",
-        value="CCO"
+        placeholder="Example: CCO"
     )
 
-    st.write("Current SMILES:")
-    st.write(smiles)
 
-if st.button("🔬 Analyze Molecule"):
+    if st.button("🔬 Analyze Molecule"):
 
-    st.write("STEP 1")
+        if not smiles.strip():
 
-    mol = Chem.MolFromSmiles(smiles)
+            st.warning(
+                "Please enter a SMILES string."
+            )
 
-    st.write("STEP 2")
+            st.stop()
 
-    if mol is not None:
-        st.success("Valid molecule")
 
-        image = Draw.MolToImage(
-            mol,
-            size=(450,450)
+        mol = Chem.MolFromSmiles(smiles)
+
+
+        if mol is None:
+
+            st.error(
+                "❌ Invalid SMILES string."
+            )
+
+            st.stop()
+
+
+        st.success(
+            "🟢 Valid Molecule"
         )
 
-        st.image(image)
 
-    else:
-        st.error("Invalid SMILES")
+        properties = get_molecular_properties(mol)
 
+
+        left, right = st.columns(2)
+
+
+        with left:
+
+            st.subheader(
+                "🧬 Molecular Structure"
+            )
+
+
+            image = Draw.MolToImage(
+                mol,
+                size=(450,450)
+            )
+
+
+            st.image(
+                image
+            )
+
+
+
+        with right:
+
+            st.subheader(
+                "📊 Molecular Properties"
+            )
+
+
+            st.metric(
+                "Formula",
+                properties["Formula"]
+            )
+
+
+            st.metric(
+                "Molecular Weight",
+                properties["Molecular Weight"]
+            )
+
+
+            st.metric(
+                "LogP",
+                properties["LogP"]
+            )
+
+
+            st.metric(
+                "TPSA",
+                properties["TPSA"]
+            )
+
+
+            st.metric(
+                "H-Bond Donors",
+                properties["Hydrogen Bond Donors"]
+            )
+
+
+            st.metric(
+                "H-Bond Acceptors",
+                properties["Hydrogen Bond Acceptors"]
+            )
+
+
+            st.metric(
+                "Rotatable Bonds",
+                properties["Rotatable Bonds"]
+            )
+
+
+
+        st.divider()
+
+
+        # ==========================
+        # Lipinski Rule
+        # ==========================
+
+        st.subheader(
+            "💊 Lipinski Drug-Likeness"
+        )
+
+
+        mw = properties["Molecular Weight"]
+        logp = properties["LogP"]
+        hbd = properties["Hydrogen Bond Donors"]
+        hba = properties["Hydrogen Bond Acceptors"]
+
+
+        if (
+            mw <= 500
+            and logp <= 5
+            and hbd <= 5
+            and hba <= 10
+        ):
+
+            st.success(
+                "✅ Lipinski Rule: PASS"
+            )
+
+        else:
+
+            st.warning(
+                "⚠️ Lipinski Rule: FAIL"
+            )
+
+
+
+        st.divider()
+
+
+        # ==========================
+        # Plotly Profile
+        # ==========================
+
+        st.subheader(
+            "📈 Molecular Profile"
+        )
+
+
+        chart_data = pd.DataFrame(
+            {
+                "Property":
+                [
+                    "Molecular Weight",
+                    "LogP",
+                    "TPSA",
+                    "HBD",
+                    "HBA"
+                ],
+
+                "Value":
+                [
+                    properties["Molecular Weight"],
+                    properties["LogP"],
+                    properties["TPSA"],
+                    properties["Hydrogen Bond Donors"],
+                    properties["Hydrogen Bond Acceptors"]
+                ]
+            }
+        )
+
+
+        fig = px.bar(
+            chart_data,
+            x="Property",
+            y="Value",
+            title="Molecular Descriptor Profile"
+        )
+
+
+        st.plotly_chart(
+            fig,
+            use_container_width=True
+        )
+
+
+
+        st.divider()
+
+
+        # ==========================
+        # Download Report
+        # ==========================
+
+        st.subheader(
+            "📥 Download Analysis Report"
+        )
+
+
+        report_df = pd.DataFrame(
+            list(properties.items()),
+            columns=[
+                "Property",
+                "Value"
+            ]
+        )
+
+
+        csv = report_df.to_csv(
+            index=False
+        )
+
+
+        st.download_button(
+            label="📥 Download CSV Report",
+            data=csv,
+            file_name="MOLE_AI_molecular_analysis.csv",
+            mime="text/csv"
+        )
+
+
+
+        st.divider()
+
+
+        # ==========================
+        # AI Interpretation
+        # ==========================
+
+        st.subheader(
+            "🤖 AI Molecular Interpretation"
+        )
+
+
+        if (
+            mw <= 500
+            and logp <= 5
+            and hbd <= 5
+            and hba <= 10
+        ):
+
+            st.success(
+                """
+                ✅ Drug-like molecular profile detected.
+
+                This molecule satisfies Lipinski Rule of Five
+                criteria and shows favorable physicochemical
+                properties for further computational drug discovery.
+                """
+            )
+
+
+        else:
+
+            st.warning(
+                """
+                ⚠️ The molecule shows some drug-likeness limitations.
+
+                Further optimization may improve its
+                pharmacokinetic properties.
+                """
+            )
+
+
+
+        with st.expander(
+            "🔬 Advanced Molecular Descriptors"
+        ):
+
+            st.table(
+                properties
+            )
 # ==========================
 # Tab 2
 # ==========================

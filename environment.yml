@@ -2,7 +2,6 @@ name: mole-ai
 
 channels:
   - conda-forge
-  - pytorch
 
 dependencies:
   - python=3.11
@@ -12,12 +11,7 @@ dependencies:
   - scipy
   - scikit-learn
   - matplotlib
-  - jupyter
-  - pytorch
   - pip
   - pip:
-      - plotly==6.3.0
-      - deepchem
-      - pytest
-      - black
-      - ruff
+      - streamlit==1.59.2
+      - plotly==6.9.0

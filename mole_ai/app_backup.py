@@ -147,6 +147,7 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs(
 
 # ==========================
 # Tab 1
+# Molecular Analysis
 # ==========================
 
 with tab1:
@@ -158,240 +159,282 @@ with tab1:
         placeholder="Example: CCO"
     )
 
-    st.markdown("### 🧪 Example Molecules")
-
-
-    example_molecules = {
-        "Ethanol": "CCO",
-        "Aspirin": "CC(=O)OC1=CC=CC=C1C(=O)O",
-        "Caffeine": "Cn1cnc2n(C)c(=O)n(C)c(=O)c12",
-        "Paracetamol": "CC(=O)NC1=CC=C(C=C1)O",
-        "Ibuprofen": "CC(C)CC1=CC=C(C=C1)C(C)C(=O)O"
-    }
-
-
-    selected_example = st.selectbox(
-        "Choose molecule example",
-        list(example_molecules.keys())
-    )
-
-
-    st.code(
-        example_molecules[selected_example]
-    )
 
     if st.button("🔬 Analyze Molecule"):
-        if validate_smiles(smiles):
 
-            mol = Chem.MolFromSmiles(smiles)
+        if not smiles.strip():
 
-            properties = get_molecular_properties(mol)
+            st.warning(
+                "Please enter a SMILES string."
+            )
 
-            st.success("🟢 Valid Molecule")
-
-            left, right = st.columns([1,1])
-
-            with left:
-
-                st.subheader("🧬 Molecular Structure")
-
-                image = Draw.MolToImage(
-                    mol,
-                    size=(450,450)
-                )
-
-                st.image(image)
-
-            with right:
-
-                st.subheader("📊 Molecular Properties")
-
-                st.metric(
-                    "Formula",
-                    properties["Formula"]
-                )
-
-                st.metric(
-                    "Molecular Weight",
-                    properties["Molecular Weight"]
-                )
-
-                st.metric(
-                    "Exact Weight",
-                    properties["Exact Molecular Weight"]
-                )
-
-                st.metric(
-                    "LogP",
-                    properties["LogP"]
-                )
-
-                st.metric(
-                    "TPSA",
-                    properties["TPSA"]
-                )
-
-                st.metric(
-                    "Heavy Atoms",
-                    properties["Heavy Atoms"]
-                )
-
-                st.metric(
-                    "H-Bond Donors",
-                    properties["Hydrogen Bond Donors"]
-                )
-
-                st.metric(
-                    "H-Bond Acceptors",
-                    properties["Hydrogen Bond Acceptors"]
-                )
-
-                st.metric(
-                    "Rotatable Bonds",
-                    properties["Rotatable Bonds"]
-                )
-
-                st.metric(
-                    "Ring Count",
-                    properties["Ring Count"]
-                )
-
-            st.divider()
-
-            mw = properties["Molecular Weight"]
-            logp = properties["LogP"]
-            hbd = properties["Hydrogen Bond Donors"]
-            hba = properties["Hydrogen Bond Acceptors"]
-
-            if (
-                mw <= 500 and
-                logp <= 5 and
-                hbd <= 5 and
-                hba <= 10
-            ):
-
-                st.success(
-                    "💊 Lipinski Rule: PASS"
-                )
-
-            else:
-
-                st.warning(
-                    "⚠️ Lipinski Rule: FAIL"
-                )
-
-            st.subheader("📈 Molecular Profile")
+            st.stop()
 
 
-            chart_data = pd.DataFrame(
-                {
-                    "Property": [
-                        "Molecular Weight",
-                        "LogP",
-                        "TPSA",
-                        "HBD",
-                        "HBA"
-                    ],
+        mol = Chem.MolFromSmiles(smiles)
 
-                    "Value": [
-                        properties["Molecular Weight"],
-                        properties["LogP"],
-                        properties["TPSA"],
-                        properties["Hydrogen Bond Donors"],
-                        properties["Hydrogen Bond Acceptors"]
-                    ]
-                }
+
+        if mol is None:
+
+            st.error(
+                "❌ Invalid SMILES string."
+            )
+
+            st.stop()
+
+
+        st.success(
+            "🟢 Valid Molecule"
+        )
+
+
+        properties = get_molecular_properties(mol)
+
+
+        left, right = st.columns(2)
+
+
+        with left:
+
+            st.subheader(
+                "🧬 Molecular Structure"
             )
 
 
-            fig = px.bar(
-                chart_data,
-                x="Property",
-                y="Value",
-                title="Molecular Descriptor Profile"
+            image = Draw.MolToImage(
+                mol,
+                size=(450,450)
             )
 
 
-            st.plotly_chart(
-                fig,
-                use_container_width=True
-            )
-
-            with st.expander(
-                "🔬 Advanced Molecular Descriptors"
-            ):
-
-                st.table(properties)
-
-            st.subheader("📄 Molecular Summary")
-
-            st.info(
-                f"""
-Formula: {properties['Formula']}
-
-Molecular Weight: {properties['Molecular Weight']}
-
-LogP: {properties['LogP']}
-
-TPSA: {properties['TPSA']}
-
-Status: Ready for AI Prediction 🚀
-"""
-            )
-
-            st.divider()
-
-            st.subheader("📥 Download Analysis")
-
-            df = pd.DataFrame(
-                list(properties.items()),
-                columns=["Property", "Value"]
-            )
-
-            csv = df.to_csv(index=False)
-
-            st.download_button(
-                label="📥 Download CSV Report",
-                data=csv,
-                file_name="molecule_analysis.csv",
-                mime="text/csv"
+            st.image(
+                image
             )
 
 
-            txt_report = f"""
-MOLE-AI Molecular Report
 
-Formula:
-{properties['Formula']}
+        with right:
 
-Molecular Weight:
-{properties['Molecular Weight']}
-
-LogP:
-{properties['LogP']}
-
-TPSA:
-{properties['TPSA']}
-
-Status:
-Ready for AI Prediction 🚀
-"""
+            st.subheader(
+                "📊 Molecular Properties"
+            )
 
 
-            st.download_button(
-                label="📄 Download TXT Report",
-                data=txt_report,
-                file_name="molecule_report.txt",
-                mime="text/plain"
+            st.metric(
+                "Formula",
+                properties["Formula"]
+            )
+
+
+            st.metric(
+                "Molecular Weight",
+                properties["Molecular Weight"]
+            )
+
+
+            st.metric(
+                "LogP",
+                properties["LogP"]
+            )
+
+
+            st.metric(
+                "TPSA",
+                properties["TPSA"]
+            )
+
+
+            st.metric(
+                "H-Bond Donors",
+                properties["Hydrogen Bond Donors"]
+            )
+
+
+            st.metric(
+                "H-Bond Acceptors",
+                properties["Hydrogen Bond Acceptors"]
+            )
+
+
+            st.metric(
+                "Rotatable Bonds",
+                properties["Rotatable Bonds"]
+            )
+
+
+
+        st.divider()
+
+
+        # ==========================
+        # Lipinski Rule
+        # ==========================
+
+        st.subheader(
+            "💊 Lipinski Drug-Likeness"
+        )
+
+
+        mw = properties["Molecular Weight"]
+        logp = properties["LogP"]
+        hbd = properties["Hydrogen Bond Donors"]
+        hba = properties["Hydrogen Bond Acceptors"]
+
+
+        if (
+            mw <= 500
+            and logp <= 5
+            and hbd <= 5
+            and hba <= 10
+        ):
+
+            st.success(
+                "✅ Lipinski Rule: PASS"
             )
 
         else:
 
-            st.error(
-                "❌ Invalid SMILES"
+            st.warning(
+                "⚠️ Lipinski Rule: FAIL"
             )
 
 
+
+        st.divider()
+
+
+        # ==========================
+        # Plotly Profile
+        # ==========================
+
+        st.subheader(
+            "📈 Molecular Profile"
+        )
+
+
+        chart_data = pd.DataFrame(
+            {
+                "Property":
+                [
+                    "Molecular Weight",
+                    "LogP",
+                    "TPSA",
+                    "HBD",
+                    "HBA"
+                ],
+
+                "Value":
+                [
+                    properties["Molecular Weight"],
+                    properties["LogP"],
+                    properties["TPSA"],
+                    properties["Hydrogen Bond Donors"],
+                    properties["Hydrogen Bond Acceptors"]
+                ]
+            }
+        )
+
+
+        fig = px.bar(
+            chart_data,
+            x="Property",
+            y="Value",
+            title="Molecular Descriptor Profile"
+        )
+
+
+        st.plotly_chart(
+            fig,
+            use_container_width=True
+        )
+
+
+
+        st.divider()
+
+
+        # ==========================
+        # Download Report
+        # ==========================
+
+        st.subheader(
+            "📥 Download Analysis Report"
+        )
+
+
+        report_df = pd.DataFrame(
+            list(properties.items()),
+            columns=[
+                "Property",
+                "Value"
+            ]
+        )
+
+
+        csv = report_df.to_csv(
+            index=False
+        )
+
+
+        st.download_button(
+            label="📥 Download CSV Report",
+            data=csv,
+            file_name="MOLE_AI_molecular_analysis.csv",
+            mime="text/csv"
+        )
+
+
+
+        st.divider()
+
+
+        # ==========================
+        # AI Interpretation
+        # ==========================
+
+        st.subheader(
+            "🤖 AI Molecular Interpretation"
+        )
+
+
+        if (
+            mw <= 500
+            and logp <= 5
+            and hbd <= 5
+            and hba <= 10
+        ):
+
+            st.success(
+                """
+                ✅ Drug-like molecular profile detected.
+
+                This molecule satisfies Lipinski Rule of Five
+                criteria and shows favorable physicochemical
+                properties for further computational drug discovery.
+                """
+            )
+
+
+        else:
+
+            st.warning(
+                """
+                ⚠️ The molecule shows some drug-likeness limitations.
+
+                Further optimization may improve its
+                pharmacokinetic properties.
+                """
+            )
+
+
+
+        with st.expander(
+            "🔬 Advanced Molecular Descriptors"
+        ):
+
+            st.table(
+                properties
+            )
 # ==========================
 # Tab 2
 # ==========================

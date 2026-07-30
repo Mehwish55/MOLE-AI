@@ -855,7 +855,6 @@ with tab4:
 
             score = admet_score(results)
 
-
             st.metric(
                 "Overall ADMET Score",
                 f"{score}/100"

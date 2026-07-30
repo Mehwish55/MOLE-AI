@@ -105,22 +105,21 @@ from mole_ai.features.fingerprints import (
     generate_fingerprint
 )
 
-
-MODEL_PATH = Path(
-    "mole_ai/models/qsar_random_forest.pkl"
+MODEL_PATH = (
+    Path(__file__).resolve().parent
+    / "qsar_random_forest.pkl"
 )
 
 import streamlit as st
 
-
 @st.cache_resource
 def load_model():
 
-    model = joblib.load(
-        MODEL_PATH
-    )
+    if not MODEL_PATH.exists():
+        st.error(f"Model file not found: {MODEL_PATH}")
+        return None
 
-    return model
+    return joblib.load(MODEL_PATH)
 
 def predict_from_smiles(smiles):
     """
@@ -153,10 +152,12 @@ def predict_from_smiles(smiles):
 
     model = load_model()
 
+    if model is None:
+          return None
 
     prediction = model.predict(
-        [features]
-    )
+         [features]
+   )
 
 
     return float(

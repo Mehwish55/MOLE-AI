@@ -42,7 +42,7 @@ MOLE-AI includes a Streamlit-based interface for molecular analysis and AI predi
 
 ## 🚀 Live Demo
 
-**Try MOLE-AI online:**https://mole-ai-sshyl275oyrhnu94letjt3.streamlit.app/
+**Try MOLE-AI online:**https://mole-ai-toolkit.streamlit.app/
 
 Current capabilities:
 

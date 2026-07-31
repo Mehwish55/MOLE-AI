@@ -110,9 +110,6 @@ MODEL_PATH = (
     / "qsar_random_forest.pkl"
 )
 
-import streamlit as st
-
-@st.cache_resource
 def load_model():
 
     if not MODEL_PATH.exists():
@@ -131,7 +128,7 @@ def predict_from_smiles(smiles):
     )
 
     if mol is None:
-        return None
+      return None
 
 
     fingerprint = generate_fingerprint(

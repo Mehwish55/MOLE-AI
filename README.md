@@ -40,6 +40,10 @@ The primary goal of MOLE-AI is to provide researchers, students, and developers 
 
 MOLE-AI includes a Streamlit-based interface for molecular analysis and AI prediction.
 
+## 🚀 Live Demo
+
+**Try MOLE-AI online:** https://YOUR-STREAMLIT-APP.streamlit.app
+
 Current capabilities:
 
 ✅ SMILES-based molecular analysis  

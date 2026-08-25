@@ -229,43 +229,43 @@ with tab1:
 
             st.metric(
                 "Formula",
-                properties["molecular_formula"]
+                properties["Formula"]
             )
 
 
             st.metric(
                 "Molecular Weight",
-                properties["molecular_weight"]
+                properties["Molecular Weight"]
             )
 
 
             st.metric(
                 "LogP",
-                properties["logp"]
+                properties["LogP"]
             )
 
 
             st.metric(
                 "TPSA",
-                properties["tpsa"]
+                properties["TPSA"]
             )
 
 
             st.metric(
                 "H-Bond Donors",
-                properties["hbd"]
+                properties["Hydrogen Bond Donors"]
             )
 
 
             st.metric(
                 "H-Bond Acceptors",
-                properties["hba"]
+                properties["Hydrogen Bond Acceptors"]
             )
 
 
             st.metric(
                 "Rotatable Bonds",
-                properties["rotatable_bonds"]
+                properties["Rotatable Bonds"]
             )
 
 
@@ -282,10 +282,10 @@ with tab1:
         )
 
 
-        mw = properties["molecular_weight"]
-        logp = properties["logp"]
-        hbd = properties["hbd"]
-        hba = properties["hba"]
+        mw = properties["Molecular Weight"]
+        logp = properties["LogP"]
+        hbd = properties["Hydrogen Bond Donors"]
+        hba = properties["Hydrogen Bond Acceptors"]
 
 
         if (
@@ -332,11 +332,11 @@ with tab1:
 
                 "Value":
                 [
-                    properties["molecular_weight"],
-                    properties["logp"],
-                    properties["tpsa"],
-                    properties["hbd"],
-                    properties["hba"]
+                    properties["Molecular Weight"],
+                    properties["LogP"],
+                    properties["TPSA"],
+                    properties["Hydrogen Bond Donors"],
+                    properties["Hydrogen Bond Acceptors"]
                 ]
             }
         )

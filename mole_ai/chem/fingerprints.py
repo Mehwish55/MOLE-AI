@@ -13,12 +13,42 @@ def generate_morgan_fingerprint(
 ):
     """
     Generate a Morgan fingerprint.
+
+    Parameters
+    ----------
+    mol : RDKit Mol
+        Molecule object.
+    radius : int
+        Morgan fingerprint radius.
+    n_bits : int
+        Number of fingerprint bits.
+
+    Returns
+    -------
+    ExplicitBitVect
+        Morgan fingerprint.
     """
 
     return AllChem.GetMorganFingerprintAsBitVect(
         mol,
         radius,
         nBits=n_bits,
+    )
+
+
+def morgan_fingerprint(
+    mol,
+    radius=2,
+    n_bits=2048,
+):
+    """
+    Backward-compatible alias for Morgan fingerprint generation.
+    """
+
+    return generate_morgan_fingerprint(
+        mol,
+        radius=radius,
+        n_bits=n_bits,
     )
 
 
@@ -36,22 +66,12 @@ def calculate_tanimoto_similarity(
     )
 
 
-def rank_by_similarity(query_fp, fingerprints):
+def rank_by_similarity(
+    query_fp,
+    fingerprints,
+):
     """
     Rank fingerprints by Tanimoto similarity.
-
-    Parameters
-    ----------
-    query_fp :
-        Query molecular fingerprint.
-
-    fingerprints : list
-        Candidate fingerprints.
-
-    Returns
-    -------
-    list
-        Similarity scores sorted highest to lowest.
     """
 
     similarities = [

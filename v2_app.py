@@ -147,8 +147,43 @@ with tab1:
                     )
 
 
-                st.divider()
+                # ====================================================
+                # Candidate Score Profile
+                # ====================================================
 
+                st.markdown(
+                    "### 📊 Candidate Score Profile"
+                )
+
+                score_df = pd.DataFrame(
+                    {
+                        "Score": [
+                            float(
+                                ranking["activity_score"]
+                            ),
+                            float(
+                                ranking["admet_score"]
+                            ),
+                            float(
+                                ranking["overall_score"]
+                            ),
+                        ]
+                    },
+                    index=[
+                        "Activity",
+                        "ADMET",
+                        "Overall",
+                    ],
+                )
+
+                st.bar_chart(
+                    score_df,
+                    y="Score",
+                    width="stretch",
+                )
+
+
+                st.divider()
 
                 # ====================================================
                 # Chemistry Analysis
@@ -545,15 +580,15 @@ with tab2:
                             hide_index=True,
                         )
 
-
                         # --------------------------------------------
-                        # Summary
+                        # Batch Screening Analytics
                         # --------------------------------------------
 
                         st.markdown(
-                            "### 📊 Screening Summary"
+                            "### 📊 Screening Overview"
                         )
 
+                        # Basic statistics
                         total = len(results)
 
                         successful = len(
@@ -563,24 +598,276 @@ with tab2:
                             ]
                         )
 
-                        summary_col1, summary_col2 = (
-                            st.columns(2)
+                        failed = total - successful
+
+
+                        # Top score
+                        if successful > 0:
+
+                            top_score = float(
+                                results[
+                                    "Overall Score"
+                                ].max()
+                            )
+
+                        else:
+
+                            top_score = 0.0
+
+
+                        # Average score
+                        if successful > 0:
+
+                            average_score = float(
+                                results[
+                                    "Overall Score"
+                                ].mean()
+                            )
+
+                        else:
+
+                            average_score = 0.0
+
+
+                        # --------------------------------------------
+                        # Overview Cards
+                        # --------------------------------------------
+
+                        overview_col1, overview_col2, overview_col3, overview_col4 = (
+                            st.columns(4)
                         )
 
-                        with summary_col1:
+                        with overview_col1:
 
                             st.metric(
                                 "Total Molecules",
                                 total,
                             )
 
-                        with summary_col2:
+                        with overview_col2:
 
                             st.metric(
-                                "Successfully Analyzed",
+                                "Successful",
                                 successful,
                             )
 
+                        with overview_col3:
+
+                            st.metric(
+                                "Top Overall Score",
+                                f"{top_score:.1f}",
+                            )
+
+                        with overview_col4:
+
+                            st.metric(
+                                "Average Score",
+                                f"{average_score:.1f}",
+                            )
+
+
+                        st.divider()
+
+
+                        # --------------------------------------------
+                        # Activity Distribution
+                        # --------------------------------------------
+
+                        st.markdown(
+                            "### 🤖 Activity Distribution"
+                        )
+
+                        if (
+                            successful > 0
+                            and "Activity" in results.columns
+                        ):
+
+                            activity_counts = (
+                                results[
+                                    results["Status"]
+                                    == "Success"
+                                ]["Activity"]
+                                .value_counts()
+                            )
+
+                            activity_df = (
+                                activity_counts
+                                .rename("Molecules")
+                                .to_frame()
+                            )
+
+                            st.bar_chart(
+                                activity_df,
+                                y="Molecules",
+                                width="stretch",
+                            )
+
+                        else:
+
+                            st.info(
+                                "No successful activity predictions available."
+                            )
+
+
+                        st.divider()
+
+
+                        # --------------------------------------------
+                        # Priority Distribution
+                        # --------------------------------------------
+
+                        st.markdown(
+                            "### 🎯 Candidate Priority Distribution"
+                        )
+
+                        if (
+                            successful > 0
+                            and "Priority" in results.columns
+                        ):
+
+                            priority_counts = (
+                                results[
+                                    results["Status"]
+                                    == "Success"
+                                ]["Priority"]
+                                .value_counts()
+                            )
+
+                            priority_df = (
+                                priority_counts
+                                .rename("Molecules")
+                                .to_frame()
+                            )
+
+                            st.bar_chart(
+                                priority_df,
+                                y="Molecules",
+                                width="stretch",
+                            )
+
+                        else:
+
+                            st.info(
+                                "No priority results available."
+                            )
+
+
+                        st.divider()
+
+
+                        # --------------------------------------------
+                        # Overall Score Distribution
+                        # --------------------------------------------
+
+                        st.markdown(
+                            "### 📈 Overall Score Distribution"
+                        )
+
+                        if (
+                            successful > 0
+                            and "Overall Score"
+                            in results.columns
+                        ):
+
+                            score_chart = (
+                                results[
+                                    results["Status"]
+                                    == "Success"
+                                ][
+                                    [
+                                        "SMILES",
+                                        "Overall Score",
+                                    ]
+                                ]
+                                .set_index("SMILES")
+                            )
+
+                            st.bar_chart(
+                                score_chart,
+                                y="Overall Score",
+                                width="stretch",
+                            )
+
+                        else:
+
+                            st.info(
+                                "No successful scores available."
+                            )
+
+
+                        st.divider()
+
+
+                        # --------------------------------------------
+                        # Top Candidates
+                        # --------------------------------------------
+
+                        st.markdown(
+                            "### 🏆 Top Candidates"
+                        )
+
+                        if successful > 0:
+
+                            top_candidates = (
+                                results[
+                                    results["Status"]
+                                    == "Success"
+                                ]
+                                .sort_values(
+                                    "Overall Score",
+                                    ascending=False,
+                                )
+                                .head(10)
+                            )
+
+
+                            # Create a clean display copy
+                            top_candidates_display = (
+                                top_candidates.copy()
+                            )
+
+
+                            st.dataframe(
+                                top_candidates_display,
+                                width="stretch",
+                                hide_index=True,
+                            )
+
+                        else:
+
+                            st.info(
+                                "No successful candidates available."
+                            )
+
+
+                        st.divider()
+
+
+                        # --------------------------------------------
+                        # Screening Statistics
+                        # --------------------------------------------
+
+                        st.markdown(
+                            "### 📋 Screening Statistics"
+                        )
+
+                        stats_col1, stats_col2 = (
+                            st.columns(2)
+                        )
+
+                        with stats_col1:
+
+                            st.metric(
+                                "Successful Analyses",
+                                successful,
+                            )
+
+                        with stats_col2:
+
+                            st.metric(
+                                "Failed Analyses",
+                                failed,
+                            )
 
                         # --------------------------------------------
                         # Download

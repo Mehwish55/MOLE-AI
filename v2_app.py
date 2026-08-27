@@ -8,7 +8,7 @@ import pandas as pd
 
 from mole_ai.workflows.drug_discovery import DrugDiscoveryWorkflow
 from mole_ai.workflows.batch_screening import BatchScreeningWorkflow
-
+from mole_ai.ranking.explanation import CandidateExplainer
 
 # ============================================================
 # Page Configuration
@@ -91,6 +91,9 @@ with tab1:
                     result = workflow.analyze(
                         smiles.strip()
                     )
+                    explainer = CandidateExplainer()
+
+                    explanation = explainer.explain(result)
 
                 st.success(
                     "✅ Molecular analysis completed"
@@ -455,7 +458,92 @@ with tab1:
 
 
                 st.divider()
-
+                # ====================================================
+                # AI Candidate Explainability
+                # ====================================================
+                
+                st.subheader(
+                    "🧠 AI Candidate Explainability"
+                )
+                
+                st.markdown(
+                    "### 🔬 Activity Interpretation"
+                )
+                
+                st.info(
+                    explanation["activity"]["interpretation"]
+                )
+                
+                st.write(
+                    f"**Predicted pIC50:** "
+                    f"{explanation['activity']['predicted_pIC50']:.3f}"
+                )
+                
+                st.write(
+                    f"**Activity Classification:** "
+                    f"{explanation['activity']['classification']}"
+                )
+                
+                st.write(
+                    f"**Activity Score:** "
+                    f"{explanation['activity']['score']:.1f}/100"
+                )
+                
+                
+                st.markdown(
+                    "### 💊 ADMET Interpretation"
+                )
+                
+                st.info(
+                    explanation["admet"]["interpretation"]
+                )
+                
+                st.write(
+                    f"**ADMET Score:** "
+                    f"{explanation['admet']['score']:.1f}/100"
+                )
+                
+                st.write(
+                    f"**Drug-likeness:** "
+                    f"{explanation['admet']['drug_likeness']}"
+                )
+                
+                
+                st.markdown(
+                    "### 🎯 Ranking Interpretation"
+                )
+                
+                st.info(
+                    explanation["ranking"]["interpretation"]
+                )
+                
+                st.write(
+                    f"**Overall Score:** "
+                    f"{explanation['ranking']['overall_score']:.1f}/100"
+                )
+                
+                st.write(
+                    f"**Priority:** "
+                    f"{explanation['ranking']['priority']}"
+                )
+                
+                
+                st.markdown(
+                    "### 🏆 Final Recommendation"
+                )
+                
+                st.success(
+                    explanation["recommendation"]
+                )
+                
+                
+                st.markdown(
+                    "### 📋 Scientific Summary"
+                )
+                
+                st.write(
+                    explanation["summary"]
+                )
 
                 # ====================================================
                 # Complete Analysis

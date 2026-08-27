@@ -8,6 +8,7 @@ import pandas as pd
 
 from mole_ai.workflows.drug_discovery import DrugDiscoveryWorkflow
 from mole_ai.workflows.batch_screening import BatchScreeningWorkflow
+from mole_ai.ranking.comparison import CandidateComparison
 from mole_ai.ranking.explanation import CandidateExplainer
 
 # ============================================================

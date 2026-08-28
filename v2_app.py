@@ -712,6 +712,7 @@ with tab3:
     
     template_df = pd.DataFrame(
         {
+              "compound_id": ["Compound_001", "Compound_002", "Compound_003", "Compound_004"],
             "smiles": [
                 "CCO",
                 "CCN",

@@ -45,8 +45,9 @@ st.divider()
 # Navigation
 # ============================================================
 
-tab1, tab2 = st.tabs(
+tab1, tab2, tab3 = st.tabs(
     [
+        "🏠 Getting Started",
         "🔬 Single Molecule Analysis",
         "📂 Batch Screening",
     ]
@@ -54,10 +55,89 @@ tab1, tab2 = st.tabs(
 
 
 # ============================================================
-# TAB 1 — SINGLE MOLECULE ANALYSIS
+# TAB 0 — GETTING STARTED
 # ============================================================
 
 with tab1:
+
+    st.header("🏠 Welcome to MOLE-AI v2")
+
+    st.markdown(
+        """
+        MOLE-AI is an AI-powered computational drug discovery
+        platform for **molecular screening and candidate prioritization**.
+
+        You can use MOLE-AI in two ways:
+
+        **🔬 Single Molecule Analysis**
+        - Enter one molecule using a SMILES string.
+        - Analyze molecular properties.
+        - Predict molecular activity.
+        - Evaluate ADMET-related properties.
+        - Calculate a candidate prioritization score.
+
+        **📂 Batch Screening**
+        - Upload your own CSV file containing molecular SMILES.
+        - Screen multiple molecules automatically.
+        - Compare molecular activity and ADMET scores.
+        - Rank candidates.
+        - Identify high-priority molecules.
+        - Download the screening results.
+        """
+    )
+
+    st.divider()
+
+    st.subheader("🚀 How to use MOLE-AI")
+
+    st.markdown(
+        """
+        **Step 1 — Prepare your molecular data**
+
+        Create a CSV file containing a column named:
+
+        `smiles`
+
+        Example:
+
+        | smiles |
+        |---|
+        | CCO |
+        | CCN |
+        | c1ccccc1 |
+        | CC(=O)Oc1ccccc1C(=O)O |
+
+        **Step 2 — Upload your CSV**
+
+        Go to the **📂 Batch Screening** tab and upload your file.
+
+        **Step 3 — Run screening**
+
+        MOLE-AI will analyze each valid molecule and generate
+        activity, ADMET, molecular-property and prioritization results.
+
+        **Step 4 — Compare candidates**
+
+        Use the ranking and analytics to identify molecules
+        that may deserve further computational investigation.
+
+        **Step 5 — Download results**
+
+        Download the complete screening results as a CSV file.
+        """
+    )
+
+    st.info(
+        "💡 MOLE-AI provides computational predictions and "
+        "prioritization. Results should be experimentally validated "
+        "before making biological or clinical decisions."
+    )
+
+# ============================================================
+# TAB 2 — SINGLE MOLECULE ANALYSIS
+# ============================================================
+
+with tab2:
 
     st.header("🔬 Single Molecule Analysis")
 
@@ -567,10 +647,10 @@ with tab1:
 
 
 # ============================================================
-# TAB 2 — BATCH SCREENING
+# TAB 3 — BATCH SCREENING
 # ============================================================
 
-with tab2:
+with tab3:
 
     st.header(
         "📂 Batch Molecular Screening"
@@ -586,12 +666,75 @@ with tab2:
         """
     )
 
-
-    uploaded_file = st.file_uploader(
-        "Upload molecular library",
-        type=["csv"],
+    # ============================================================
+    # CSV Template and Upload Instructions
+    # ============================================================
+    
+    st.markdown(
+        """
+        ### 📋 Prepare Your Molecular Library
+    
+        Upload a CSV file containing a column named **`smiles`**.
+    
+        Each row should contain one molecular SMILES string.
+    
+        **Example:**
+    
+        | smiles |
+        |---|
+        | CCO |
+        | CCN |
+        | c1ccccc1 |
+        | CC(=O)Oc1ccccc1C(=O)O |
+    
+        MOLE-AI will analyze each molecule using:
+    
+        **SMILES Validation → Molecular Properties → QSAR → ADMET → Ranking**
+        """
     )
-
+    
+    # ------------------------------------------------------------
+    # Download CSV Template
+    # ------------------------------------------------------------
+    
+    template_df = pd.DataFrame(
+        {
+            "smiles": [
+                "CCO",
+                "CCN",
+                "c1ccccc1",
+                "CC(=O)Oc1ccccc1C(=O)O",
+            ]
+        }
+    )
+    
+    template_csv = template_df.to_csv(
+        index=False
+    )
+    
+    st.download_button(
+        label="📥 Download CSV Template",
+        data=template_csv,
+        file_name="MOLE_AI_molecular_library_template.csv",
+        mime="text/csv",
+    )
+    
+    st.caption(
+        "You can download the template, replace the example SMILES "
+        "with your own molecules, and upload the file below."
+    )
+    
+    st.divider()
+    
+    # ------------------------------------------------------------
+    # Upload
+    # ------------------------------------------------------------
+    
+    uploaded_file = st.file_uploader(
+        "📂 Upload your molecular library",
+        type=["csv"],
+        help="CSV must contain a column named 'smiles'.",
+    )
 
     if uploaded_file is not None:
 

@@ -825,6 +825,16 @@ with tab3:
                             width="stretch",
                             hide_index=True,
                         )
+                        # Download ranked screening results
+                        results_csv = results.to_csv(index=False)
+
+                        st.download_button(
+                            label="📥 Download Ranked Results (CSV)",
+                            data=results_csv,
+                            file_name="MOLE_AI_ranked_screening_results.csv",
+                            mime="text/csv",
+                        )
+
 
 
 

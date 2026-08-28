@@ -5,6 +5,7 @@ AI-Powered Computational Drug Discovery Platform
 
 import streamlit as st
 import pandas as pd
+from mole_ai.utils.validation import validate_molecular_library
 
 from mole_ai.workflows.drug_discovery import DrugDiscoveryWorkflow
 from mole_ai.workflows.batch_screening import BatchScreeningWorkflow

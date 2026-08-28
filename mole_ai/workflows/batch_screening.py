@@ -24,9 +24,13 @@ class BatchScreeningWorkflow:
         self,
         dataframe: pd.DataFrame,
         smiles_column: str = "smiles",
+        compound_id_column: str = "compound_id",
     ) -> pd.DataFrame:
         """
         Screen a dataframe of molecules.
+
+        The SMILES column is required.
+        The compound ID column is optional.
 
         Parameters
         ----------
@@ -35,6 +39,9 @@ class BatchScreeningWorkflow:
 
         smiles_column : str
             Name of the SMILES column.
+
+        compound_id_column : str
+            Optional name of the compound ID column.
 
         Returns
         -------
@@ -47,11 +54,23 @@ class BatchScreeningWorkflow:
                 f"Missing required column: {smiles_column}"
             )
 
+        has_compound_id = compound_id_column in dataframe.columns
+
         results = []
 
         for index, row in dataframe.iterrows():
 
             smiles = str(row[smiles_column]).strip()
+
+            if has_compound_id:
+                compound_id = str(
+                    row[compound_id_column]
+                ).strip()
+
+                if not compound_id or compound_id.lower() == "nan":
+                    compound_id = f"Molecule_{index + 1:03d}"
+            else:
+                compound_id = f"Molecule_{index + 1:03d}"
 
             try:
 
@@ -59,6 +78,7 @@ class BatchScreeningWorkflow:
 
                 results.append(
                     {
+                        "Compound ID": compound_id,
                         "SMILES": smiles,
 
                         "Molecular Formula":
@@ -114,6 +134,7 @@ class BatchScreeningWorkflow:
 
                 results.append(
                     {
+                        "Compound ID": compound_id,
                         "SMILES": smiles,
                         "Molecular Formula": None,
                         "Predicted pIC50": None,

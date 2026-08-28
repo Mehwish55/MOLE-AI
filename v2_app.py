@@ -10,6 +10,18 @@ from mole_ai.workflows.drug_discovery import DrugDiscoveryWorkflow
 from mole_ai.workflows.batch_screening import BatchScreeningWorkflow
 from mole_ai.ranking.comparison import CandidateComparison
 from mole_ai.ranking.explanation import CandidateExplainer
+from mole_ai.utils.export import dataframe_to_csv
+
+
+def add_csv_download(dataframe):
+    """Display a download button for a DataFrame."""
+    csv_data = dataframe_to_csv(dataframe)
+    st.download_button(
+        label="📥 Download Ranked Results (CSV)",
+        data=csv_data,
+        file_name="MOLE_AI_ranked_results.csv",
+        mime="text/csv",
+    )
 
 # ============================================================
 # Page Configuration
@@ -811,6 +823,8 @@ with tab3:
                             width="stretch",
                             hide_index=True,
                         )
+
+
 
 
                         # --------------------------------------------

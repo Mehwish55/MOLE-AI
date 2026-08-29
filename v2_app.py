@@ -751,6 +751,114 @@ with tab2:
 
                 st.divider()
 
+                # ====================================================
+                # Molecular Generation
+                # ====================================================
+
+                st.subheader(
+                    "🧪 Molecular Generation"
+                )
+
+                st.caption(
+                    "Generate controlled molecular variants from "
+                    "the analyzed parent molecule."
+                )
+
+                generation = result.get(
+                    "generation",
+                    []
+                )
+
+                if generation:
+
+                    st.markdown(
+                        "### 🧬 Generated Candidates"
+                    )
+
+                    generation_df = pd.DataFrame(
+                        generation
+                    )
+
+                    display_columns = [
+                        "candidate_id",
+                        "smiles",
+                        "strategy",
+                        "similarity",
+                    ]
+
+                    available_columns = [
+                        column
+                        for column in display_columns
+                        if column in generation_df.columns
+                    ]
+
+                    st.dataframe(
+                        generation_df[available_columns],
+                        width="stretch",
+                        hide_index=True,
+                    )
+
+                    if "similarity" in generation_df.columns:
+
+                        similarity_df = generation_df[
+                            [
+                                "candidate_id",
+                                "similarity",
+                            ]
+                        ].copy()
+
+                        similarity_df[
+                            "similarity_percent"
+                        ] = (
+                            similarity_df["similarity"] * 100
+                        ).round(2)
+
+                        st.markdown(
+                            "### 📊 Parent–Candidate Similarity"
+                        )
+
+                        st.bar_chart(
+                            similarity_df.set_index(
+                                "candidate_id"
+                            )["similarity_percent"],
+                            y="similarity_percent",
+                            width="stretch",
+                        )
+
+                    generation_csv = (
+                        generation_df.to_csv(
+                            index=False
+                        )
+                    )
+
+                    st.download_button(
+                        label=(
+                            "📥 Download Generated Candidates (CSV)"
+                        ),
+                        data=generation_csv,
+                        file_name=(
+                            "MOLE_AI_generated_candidates.csv"
+                        ),
+                        mime="text/csv",
+                    )
+
+                    st.info(
+                        "⚠️ Generated molecules are computational "
+                        "hypotheses produced by rule-based structural "
+                        "transformations. They are not experimentally "
+                        "validated compounds and require further "
+                        "scientific evaluation."
+                    )
+
+                else:
+
+                    st.info(
+                        "No generated candidates are available "
+                        "for this molecule."
+                    )
+
+                st.divider()
+
                 # Complete Analysis
                 # ====================================================
 

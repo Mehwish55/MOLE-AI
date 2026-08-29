@@ -11,6 +11,7 @@ from mole_ai.workflows.drug_discovery import DrugDiscoveryWorkflow
 from mole_ai.workflows.batch_screening import BatchScreeningWorkflow
 from mole_ai.ranking.comparison import CandidateComparison
 from mole_ai.ranking.explanation import CandidateExplainer
+from mole_ai.agents.similarity_agent import SimilarityAgent
 from mole_ai.utils.export import dataframe_to_csv
 
 
@@ -58,11 +59,12 @@ st.divider()
 # Navigation
 # ============================================================
 
-tab1, tab2, tab3 = st.tabs(
+tab1, tab2, tab3, tab4 = st.tabs(
     [
         "🏠 Getting Started",
         "🔬 Single Molecule Analysis",
         "📂 Batch Screening",
+        "🧬 Molecular Similarity",
     ]
 )
 
@@ -1164,6 +1166,214 @@ with tab3:
 
             st.error(
                 "❌ Could not read CSV file"
+            )
+
+            st.exception(error)
+
+
+# ============================================================
+# TAB 4 — MOLECULAR SIMILARITY
+# ============================================================
+
+with tab4:
+
+    st.header("🧬 Molecular Similarity Search")
+
+    st.markdown(
+        """
+        Compare a query molecule against a molecular library
+        using **Morgan fingerprints** and **Tanimoto similarity**.
+
+        Higher similarity values indicate greater structural similarity.
+        """
+    )
+
+    st.divider()
+
+    similarity_col1, similarity_col2 = st.columns(2)
+
+    with similarity_col1:
+
+        query_smiles = st.text_input(
+            "🔬 Query Molecule SMILES",
+            placeholder="Example: CCO",
+            help="Enter a valid molecular SMILES string.",
+        )
+
+    with similarity_col2:
+
+        top_k = st.number_input(
+            "🏆 Number of Similar Molecules",
+            min_value=1,
+            max_value=100,
+            value=10,
+            step=1,
+        )
+
+    st.markdown("### 📂 Molecular Library")
+
+    similarity_file = st.file_uploader(
+        "Upload a CSV containing a 'smiles' column",
+        type=["csv"],
+        key="similarity_library_upload",
+        help="Optional compound_id column is supported.",
+    )
+
+    if similarity_file is not None:
+
+        try:
+
+            similarity_df = pd.read_csv(
+                similarity_file
+            )
+
+            st.write(
+                f"Library molecules: {len(similarity_df)}"
+            )
+
+            st.dataframe(
+                similarity_df.head(10),
+                width="stretch",
+                hide_index=True,
+            )
+
+            if "smiles" not in similarity_df.columns:
+
+                st.error(
+                    "❌ CSV must contain a column named 'smiles'."
+                )
+
+            elif not query_smiles.strip():
+
+                st.warning(
+                    "⚠️ Please enter a query molecule SMILES."
+                )
+
+            else:
+
+                if st.button(
+                    "🔎 Find Similar Molecules",
+                    type="primary",
+                ):
+
+                    try:
+
+                        with st.spinner(
+                            "Calculating molecular similarities..."
+                        ):
+
+                            similarity_agent = SimilarityAgent()
+
+                            library_records = (
+                                similarity_df.to_dict(
+                                    orient="records"
+                                )
+                            )
+
+                            similarity_results = (
+                                similarity_agent.rank_similar(
+                                    query_smiles.strip(),
+                                    library_records,
+                                    top_k=int(top_k),
+                                )
+                            )
+
+                        if not similarity_results:
+
+                            st.warning(
+                                "No valid molecules were found "
+                                "in the uploaded library."
+                            )
+
+                        else:
+
+                            st.success(
+                                "✅ Molecular similarity analysis completed"
+                            )
+
+                            similarity_results_df = pd.DataFrame(
+                                similarity_results
+                            )
+
+                            similarity_results_df[
+                                "similarity_percent"
+                            ] = (
+                                similarity_results_df[
+                                    "similarity"
+                                ]
+                                * 100
+                            ).round(2)
+
+                            similarity_results_df = (
+                                similarity_results_df[
+                                    [
+                                        "compound_id",
+                                        "smiles",
+                                        "similarity",
+                                        "similarity_percent",
+                                    ]
+                                ]
+                            )
+
+                            st.subheader(
+                                "🏆 Most Similar Molecules"
+                            )
+
+                            st.dataframe(
+                                similarity_results_df,
+                                width="stretch",
+                                hide_index=True,
+                            )
+
+                            st.markdown(
+                                "### 📊 Similarity Scores"
+                            )
+
+                            chart_df = (
+                                similarity_results_df[
+                                    [
+                                        "compound_id",
+                                        "similarity_percent",
+                                    ]
+                                ]
+                                .set_index("compound_id")
+                            )
+
+                            st.bar_chart(
+                                chart_df,
+                                y="similarity_percent",
+                                width="stretch",
+                            )
+
+                            similarity_csv = (
+                                similarity_results_df.to_csv(
+                                    index=False
+                                )
+                            )
+
+                            st.download_button(
+                                label=(
+                                    "📥 Download Similarity Results (CSV)"
+                                ),
+                                data=similarity_csv,
+                                file_name=(
+                                    "MOLE_AI_similarity_results.csv"
+                                ),
+                                mime="text/csv",
+                            )
+
+                    except Exception as error:
+
+                        st.error(
+                            "❌ Molecular similarity analysis failed"
+                        )
+
+                        st.exception(error)
+
+        except Exception as error:
+
+            st.error(
+                "❌ Could not read molecular library"
             )
 
             st.exception(error)

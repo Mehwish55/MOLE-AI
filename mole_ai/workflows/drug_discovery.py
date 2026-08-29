@@ -8,6 +8,7 @@ Ranking components into a unified molecular analysis workflow.
 from mole_ai.agents.chemistry_agent import ChemistryAgent
 from mole_ai.agents.qsar_agent import QSARAgent
 from mole_ai.agents.admet_agent import ADMETAgent
+from mole_ai.agents.optimization_agent import MolecularOptimizationAgent
 from mole_ai.ranking.candidate_ranker import CandidateRanker
 
 
@@ -20,6 +21,7 @@ class DrugDiscoveryWorkflow:
         self.chemistry_agent = ChemistryAgent()
         self.qsar_agent = QSARAgent()
         self.admet_agent = ADMETAgent()
+        self.optimization_agent = MolecularOptimizationAgent()
         self.candidate_ranker = CandidateRanker()
 
     def analyze(self, smiles: str) -> dict:
@@ -61,5 +63,12 @@ class DrugDiscoveryWorkflow:
 
         # 5. Add ranking to final result
         workflow_result["ranking"] = ranking_result
+
+        # 6. Molecular optimization analysis
+        optimization_result = self.optimization_agent.analyze(
+            workflow_result
+        )
+
+        workflow_result["optimization"] = optimization_result
 
         return workflow_result

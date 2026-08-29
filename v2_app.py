@@ -642,6 +642,115 @@ with tab2:
                 )
 
                 # ====================================================
+                # ====================================================
+                # Molecular Optimization
+                # ====================================================
+
+                st.subheader(
+                    "🧬 Molecular Optimization"
+                )
+
+                optimization = result.get(
+                    "optimization",
+                    {}
+                )
+
+                if optimization:
+
+                    optimization_priority = optimization.get(
+                        "optimization_priority",
+                        "Not available",
+                    )
+
+                    st.markdown(
+                        "### 🎯 Optimization Priority"
+                    )
+
+                    if optimization_priority == "High":
+                        st.error(
+                            f"🔴 **{optimization_priority} Priority**"
+                        )
+
+                    elif optimization_priority == "Medium":
+                        st.warning(
+                            f"🟡 **{optimization_priority} Priority**"
+                        )
+
+                    else:
+                        st.success(
+                            f"🟢 **{optimization_priority} Priority**"
+                        )
+
+                    st.markdown(
+                        "### 💡 Optimization Suggestions"
+                    )
+
+                    suggestions = optimization.get(
+                        "suggestions",
+                        []
+                    )
+
+                    for suggestion in suggestions:
+                        st.info(
+                            f"• {suggestion}"
+                        )
+
+                    st.markdown(
+                        "### 📊 Optimization Assessment"
+                    )
+
+                    opt_col1, opt_col2, opt_col3 = st.columns(3)
+
+                    with opt_col1:
+                        st.metric(
+                            "Predicted pIC50",
+                            f"{optimization.get('predicted_pIC50', 0):.3f}",
+                        )
+
+                    with opt_col2:
+                        st.metric(
+                            "ADMET Score",
+                            f"{optimization.get('admet_score', 0):.1f}",
+                        )
+
+                    with opt_col3:
+                        st.metric(
+                            "Overall Score",
+                            f"{optimization.get('overall_score', 0):.1f}",
+                        )
+
+                    properties = optimization.get(
+                        "properties",
+                        {}
+                    )
+
+                    if properties:
+
+                        st.markdown(
+                            "### 🧪 Properties Considered"
+                        )
+
+                        properties_df = pd.DataFrame(
+                            {
+                                "Property": list(properties.keys()),
+                                "Value": list(properties.values()),
+                            }
+                        )
+
+                        st.dataframe(
+                            properties_df,
+                            width="stretch",
+                            hide_index=True,
+                        )
+
+                else:
+
+                    st.info(
+                        "Molecular optimization analysis is not available."
+                    )
+
+                st.divider()
+
                 # Complete Analysis
                 # ====================================================
 

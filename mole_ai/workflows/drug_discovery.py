@@ -10,6 +10,7 @@ from mole_ai.agents.qsar_agent import QSARAgent
 from mole_ai.agents.admet_agent import ADMETAgent
 from mole_ai.agents.optimization_agent import MolecularOptimizationAgent
 from mole_ai.agents.generation_agent import MolecularGenerationAgent
+from mole_ai.agents.generated_candidate_evaluation_agent import GeneratedCandidateEvaluationAgent
 from mole_ai.ranking.candidate_ranker import CandidateRanker
 
 
@@ -24,6 +25,7 @@ class DrugDiscoveryWorkflow:
         self.admet_agent = ADMETAgent()
         self.optimization_agent = MolecularOptimizationAgent()
         self.generation_agent = MolecularGenerationAgent()
+        self.generated_candidate_evaluation_agent = GeneratedCandidateEvaluationAgent()
         self.candidate_ranker = CandidateRanker()
 
     def analyze(self, smiles: str) -> dict:
@@ -79,5 +81,16 @@ class DrugDiscoveryWorkflow:
         )
 
         workflow_result["generation"] = generation_result
+
+        # 8. Generated candidate evaluation
+        evaluated_candidates = (
+            self.generated_candidate_evaluation_agent.evaluate_candidates(
+                generation_result
+            )
+        )
+
+        workflow_result["generated_candidate_evaluation"] = (
+            evaluated_candidates
+        )
 
         return workflow_result

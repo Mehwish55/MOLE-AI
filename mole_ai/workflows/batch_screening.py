@@ -76,6 +76,29 @@ class BatchScreeningWorkflow:
 
                 result = self.workflow.analyze(smiles)
 
+                # Generated candidate results
+                generation = result.get(
+                    "generation",
+                    []
+                )
+
+                evaluated_candidates = result.get(
+                    "generated_candidate_evaluation",
+                    []
+                )
+
+                # Find best evaluated generated candidate
+                if evaluated_candidates:
+                    best_candidate = max(
+                        evaluated_candidates,
+                        key=lambda item: item.get(
+                            "overall_score",
+                            float("-inf"),
+                        ),
+                    )
+                else:
+                    best_candidate = {}
+
                 results.append(
                     {
                         "Compound ID": compound_id,
@@ -125,11 +148,44 @@ class BatchScreeningWorkflow:
                                 "priority"
                             ],
 
+                        # Generated candidate summary
+                        "Generated Candidates":
+                            len(generation),
+
+                        "Best Generated Score":
+                            best_candidate.get(
+                                "overall_score"
+                            ),
+
+                        "Best Generated pIC50":
+                            best_candidate.get(
+                                "predicted_pIC50"
+                            ),
+
+                        "Best Generated ADMET":
+                            best_candidate.get(
+                                "admet_score"
+                            ),
+
+                        "Best Candidate ID":
+                            best_candidate.get(
+                                "candidate_id"
+                            ),
+
+                        "Best Candidate Similarity":
+                            best_candidate.get(
+                                "similarity"
+                            ),
+
+                        "Best Candidate Priority":
+                            best_candidate.get(
+                                "priority"
+                            ),
+
                         "Status":
                             "Success",
                     }
                 )
-
             except Exception as error:
 
                 results.append(
@@ -142,6 +198,15 @@ class BatchScreeningWorkflow:
                         "ADMET Score": None,
                         "Overall Score": None,
                         "Priority": None,
+
+                        "Generated Candidates": 0,
+                        "Best Generated Score": None,
+                        "Best Generated pIC50": None,
+                        "Best Generated ADMET": None,
+                        "Best Candidate ID": None,
+                        "Best Candidate Similarity": None,
+                        "Best Candidate Priority": None,
+
                         "Status": f"Error: {error}",
                     }
                 )

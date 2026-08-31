@@ -13,7 +13,10 @@ from mole_ai.ranking.comparison import CandidateComparison
 from mole_ai.ranking.explanation import CandidateExplainer
 from mole_ai.agents.similarity_agent import SimilarityAgent
 from mole_ai.utils.export import dataframe_to_csv
-
+from mole_ai.reports.pdf_report import (
+    generate_single_molecule_report,
+    generate_batch_screening_report,
+)
 
 def add_csv_download(dataframe):
     """Display a download button for a DataFrame."""
@@ -627,20 +630,52 @@ with tab2:
                 st.markdown(
                     "### 🏆 Final Recommendation"
                 )
-                
+
                 st.success(
                     explanation["recommendation"]
                 )
-                
-                
+
                 st.markdown(
                     "### 📋 Scientific Summary"
                 )
-                
+
                 st.write(
                     explanation["summary"]
                 )
 
+                st.divider()
+
+                # ====================================================
+                # Professional PDF Report
+                # ====================================================
+
+                st.subheader(
+                    "📄 Research Report"
+                )
+
+                single_pdf = (
+                    generate_single_molecule_report(
+                        result,
+                        explanation,
+                    )
+                )
+
+                st.download_button(
+                    label="📥 Download Professional PDF Report",
+                    data=single_pdf,
+                    file_name="MOLE_AI_single_molecule_report.pdf",
+                    mime="application/pdf",
+                )
+                st.download_button(
+                      label=(
+                          "📥 Download Professional PDF Report"
+                      ),
+                      data=single_pdf,
+                      file_name=(
+                          "MOLE_AI_single_molecule_report.pdf"
+                      ),
+                      mime="application/pdf",
+                  )
                 # ====================================================
                 # ====================================================
                 # Molecular Optimization

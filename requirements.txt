@@ -6,3 +6,4 @@ scikit-learn
 matplotlib
 rdkit-pypi
 Pillow
+reportlab

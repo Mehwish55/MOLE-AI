@@ -859,6 +859,198 @@ with tab2:
 
                 st.divider()
 
+                # ====================================================
+                # Generated Candidate Evaluation
+                # ====================================================
+
+                st.subheader(
+                    "🔬 Generated Candidate Evaluation"
+                )
+
+                st.caption(
+                    "Generated molecules are evaluated using the "
+                    "existing QSAR, ADMET, and candidate-ranking "
+                    "components."
+                )
+
+                evaluated_candidates = result.get(
+                    "generated_candidate_evaluation",
+                    []
+                )
+
+                if evaluated_candidates:
+
+                    evaluation_df = pd.DataFrame(
+                        evaluated_candidates
+                    )
+
+                    evaluation_columns = [
+                        "candidate_id",
+                        "smiles",
+                        "strategy",
+                        "similarity",
+                        "predicted_pIC50",
+                        "activity_class",
+                        "admet_score",
+                        "overall_score",
+                        "priority",
+                    ]
+
+                    available_evaluation_columns = [
+                        column
+                        for column in evaluation_columns
+                        if column in evaluation_df.columns
+                    ]
+
+                    display_evaluation_df = evaluation_df[
+                        available_evaluation_columns
+                    ].copy()
+
+                    if "similarity" in display_evaluation_df.columns:
+                        display_evaluation_df[
+                            "similarity"
+                        ] = (
+                            display_evaluation_df[
+                                "similarity"
+                            ].round(3)
+                        )
+
+                    if "predicted_pIC50" in display_evaluation_df.columns:
+                        display_evaluation_df[
+                            "predicted_pIC50"
+                        ] = (
+                            display_evaluation_df[
+                                "predicted_pIC50"
+                            ].round(3)
+                        )
+
+                    if "admet_score" in display_evaluation_df.columns:
+                        display_evaluation_df[
+                            "admet_score"
+                        ] = (
+                            display_evaluation_df[
+                                "admet_score"
+                            ].round(1)
+                        )
+
+                    if "overall_score" in display_evaluation_df.columns:
+                        display_evaluation_df[
+                            "overall_score"
+                        ] = (
+                            display_evaluation_df[
+                                "overall_score"
+                            ].round(1)
+                        )
+
+                    st.dataframe(
+                        display_evaluation_df,
+                        width="stretch",
+                        hide_index=True,
+                    )
+
+                    # ------------------------------------------------
+                    # Evaluation Summary
+                    # ------------------------------------------------
+
+                    st.markdown(
+                        "### 📊 Evaluation Summary"
+                    )
+
+                    eval_col1, eval_col2, eval_col3 = st.columns(3)
+
+                    with eval_col1:
+                        st.metric(
+                            "Evaluated Candidates",
+                            len(evaluated_candidates),
+                        )
+
+                    with eval_col2:
+                        best_score = float(
+                            evaluation_df[
+                                "overall_score"
+                            ].max()
+                        )
+
+                        st.metric(
+                            "Best Overall Score",
+                            f"{best_score:.1f}",
+                        )
+
+                    with eval_col3:
+                        best_candidate = evaluation_df.iloc[
+                            evaluation_df[
+                                "overall_score"
+                            ].idxmax()
+                        ]
+
+                        st.metric(
+                            "Top Candidate",
+                            best_candidate["candidate_id"],
+                        )
+
+                    # ------------------------------------------------
+                    # Candidate Score Comparison
+                    # ------------------------------------------------
+
+                    if "overall_score" in evaluation_df.columns:
+
+                        score_chart_df = evaluation_df[
+                            [
+                                "candidate_id",
+                                "overall_score",
+                            ]
+                        ].copy()
+
+                        score_chart_df = score_chart_df.set_index(
+                            "candidate_id"
+                        )
+
+                        st.markdown(
+                            "### 🏆 Candidate Overall Scores"
+                        )
+
+                        st.bar_chart(
+                            score_chart_df,
+                            y="overall_score",
+                            width="stretch",
+                        )
+
+                    # ------------------------------------------------
+                    # Download Evaluation Results
+                    # ------------------------------------------------
+
+                    evaluation_csv = evaluation_df.to_csv(
+                        index=False
+                    )
+
+                    st.download_button(
+                        label=(
+                            "📥 Download Evaluated Candidates (CSV)"
+                        ),
+                        data=evaluation_csv,
+                        file_name=(
+                            "MOLE_AI_evaluated_generated_candidates.csv"
+                        ),
+                        mime="text/csv",
+                    )
+
+                    st.info(
+                        "⚠️ Evaluation results are computational "
+                        "predictions used for candidate prioritization. "
+                        "They are not experimental validation of "
+                        "biological activity, safety, or efficacy."
+                    )
+
+                else:
+
+                    st.info(
+                        "No generated candidates were successfully "
+                        "evaluated."
+                    )
+
+                st.divider()
+
+                # ====================================================
                 # Complete Analysis
                 # ====================================================
 

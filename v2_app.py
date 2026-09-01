@@ -1087,6 +1087,12 @@ with tab2:
                     st.json(result)
 
 
+            except ValueError as error:
+
+                st.warning(
+                    f"⚠️ Invalid SMILES string: {error}"
+                )
+
             except Exception as error:
 
                 st.error(

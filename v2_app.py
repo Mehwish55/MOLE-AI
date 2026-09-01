@@ -48,7 +48,7 @@ logo_col = st.columns([1, 2, 1])[1]
 with logo_col:
     st.image(
         "assets/images/logo.png",
-        width=180,
+        width=300,
     )
 
 st.title("🧬 MOLE-AI")

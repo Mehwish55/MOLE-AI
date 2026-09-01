@@ -1272,6 +1272,19 @@ with tab3:
                             mime="text/csv",
                         )
 
+                        # Professional Batch Screening PDF Report
+                        batch_pdf = generate_batch_screening_report(
+                            results
+                        )
+
+                        st.download_button(
+                            label="📄 Download Professional PDF Report",
+                            data=batch_pdf,
+                            file_name="MOLE_AI_batch_screening_report.pdf",
+                            mime="application/pdf",
+                            key="batch_screening_pdf_download",
+                        )
+
 
 
 

@@ -33,7 +33,7 @@ def add_csv_download(dataframe):
 # ============================================================
 
 st.set_page_config(
-    page_title="MOLE-AI v2",
+    page_title="MOLE-AI",
     page_icon="🧬",
     layout="wide",
 )
@@ -43,7 +43,15 @@ st.set_page_config(
 # Header
 # ============================================================
 
-st.title("🧬 MOLE-AI v2")
+logo_col = st.columns([1, 2, 1])[1]
+
+with logo_col:
+    st.image(
+        "assets/images/logo.png",
+        width=180,
+    )
+
+st.title("🧬 MOLE-AI")
 
 st.markdown(
     """
@@ -78,7 +86,7 @@ tab1, tab2, tab3, tab4 = st.tabs(
 
 with tab1:
 
-    st.header("🏠 Welcome to MOLE-AI v2")
+    st.header("🏠 Welcome to MOLE-AI")
 
     st.markdown(
         """

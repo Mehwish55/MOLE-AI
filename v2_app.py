@@ -659,23 +659,14 @@ with tab2:
                         explanation,
                     )
                 )
-
                 st.download_button(
                     label="📥 Download Professional PDF Report",
                     data=single_pdf,
                     file_name="MOLE_AI_single_molecule_report.pdf",
                     mime="application/pdf",
+                    key="single_molecule_pdf_download",
                 )
-                st.download_button(
-                      label=(
-                          "📥 Download Professional PDF Report"
-                      ),
-                      data=single_pdf,
-                      file_name=(
-                          "MOLE_AI_single_molecule_report.pdf"
-                      ),
-                      mime="application/pdf",
-                  )
+
                 # ====================================================
                 # ====================================================
                 # Molecular Optimization

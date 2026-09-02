@@ -45,11 +45,11 @@ MOLE-AI v2 is intended as a **research and computational decision-support platfo
 
 > **Important:** MOLE-AI v2 provides computational predictions and hypotheses. Results are not experimental validation and should be independently evaluated using appropriate chemical, biological, and experimental methods.
 
-### 🌐 Live Application
+### 🌐 Public Deployment
 
-**Try MOLE-AI online:**
+**MOLE-AI v2.0.0 is currently a Release Candidate.**
 
-https://mole-ai-toolkit.streamlit.app/
+The V2 platform is being prepared for public deployment. A public V2 application URL will be provided with the production release.
 
 ---
 
@@ -430,7 +430,7 @@ MOLE-AI is developed as an open-source computational research platform for AI-as
 
 **MOLE-AI v2.0.0 — Release Candidate**
 
-The v2 platform has been validated with automated testing and is being prepared for public deployment.
+The v2 platform has undergone automated functional testing and is being prepared for public deployment.
 
 Computational predictions should be independently validated before scientific or experimental use.
 

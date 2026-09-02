@@ -47,9 +47,9 @@ MOLE-AI v2 is intended as a **research and computational decision-support platfo
 
 ### 🌐 Public Deployment
 
-**MOLE-AI v2.0.0 is currently a Release Candidate.**
+**MOLE-AI v2.0.0 Release Candidate**
 
-The V2 platform is being prepared for public deployment. A public V2 application URL will be provided with the production release.
+**Live V2 Application:** https://mole-ai.streamlit.app/
 
 ---
 

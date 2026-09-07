@@ -198,8 +198,8 @@ class CandidateExplainer:
 
             recommendation = (
                 "Prioritize for downstream computational "
-                "studies such as molecular docking and "
-                "further ADMET evaluation."
+                "evaluation, further ADMET-related screening, "
+                "and experimental validation."
             )
 
         elif priority == "Medium Priority":

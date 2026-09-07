@@ -544,7 +544,7 @@ with tab2:
                 # ====================================================
 
                 st.markdown(
-                    "### 🧠 Ranking Interpretation"
+                    "### 📊 Ranking Interpretation"
                 )
 
                 st.write(
@@ -566,11 +566,11 @@ with tab2:
 
                 st.divider()
                 # ====================================================
-                # AI Candidate Explainability
+                # Computational Candidate Explainability
                 # ====================================================
                 
                 st.subheader(
-                    "🧠 AI Candidate Explainability"
+                    "🔬 Computational Candidate Explainability"
                 )
                 
                 st.markdown(

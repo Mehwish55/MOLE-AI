@@ -376,7 +376,7 @@ MOLE-AI/
 ├── v2_app.py
 ├── app.py
 ├── requirements.txt
-├── environment.yml
+├── environment.conda.yml
 ├── pyproject.toml
 ├── CHANGELOG.md
 ├── RELEASE_NOTES.md

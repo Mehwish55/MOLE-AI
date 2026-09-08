@@ -13,9 +13,8 @@ dependencies:
   - matplotlib
   - joblib
   - pillow
-  - pytorch
   - pip
   - pip:
       - streamlit==1.59.2
       - plotly==6.9.0
-      - pytest
+      - reportlab

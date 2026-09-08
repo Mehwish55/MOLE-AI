@@ -7,6 +7,5 @@ matplotlib
 rdkit
 Pillow
 joblib
-torch
 pytest
 reportlab

@@ -1209,6 +1209,13 @@ with tab3:
                 uploaded_file
             )
 
+            # Normalize column names so common variants such as
+            # SMILES, Smiles, and "smiles " are accepted.
+            dataframe.columns = [
+                str(column).strip().lower()
+                for column in dataframe.columns
+            ]
+
 
             st.subheader(
                 "📄 Input Dataset"
@@ -1688,6 +1695,13 @@ with tab4:
             similarity_df = pd.read_csv(
                 similarity_file
             )
+
+            # Normalize column names so common variants such as
+            # SMILES, Smiles, and "smiles " are accepted.
+            similarity_df.columns = [
+                str(column).strip().lower()
+                for column in similarity_df.columns
+            ]
 
             st.write(
                 f"Library molecules: {len(similarity_df)}"

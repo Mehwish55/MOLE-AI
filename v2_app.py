@@ -57,7 +57,7 @@ st.markdown(
     """
     ### AI-Powered Computational Drug Discovery Platform
 
-    Integrating **cheminformatics, machine learning,
+    **Integrating cheminformatics, machine learning,
     molecular property analysis, ADMET screening,
     and candidate prioritization**.
     """

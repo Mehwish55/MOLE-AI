@@ -37,8 +37,15 @@ st.set_page_config(
     page_icon="🧬",
     layout="wide",
 )
-
-
+# Hide the Streamlit Cloud "Fork" and GitHub buttons in the header.
+st.markdown(
+    """
+    <style>
+    [data-testid="stToolbarActions"] {display: none;}
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 # ============================================================
 # Header
 # ============================================================

@@ -9,7 +9,25 @@ description = "An open-source toolkit for multi-objective AI drug design"
 requires-python = ">=3.11,<3.12"
 dependencies = [
     "pandas",
+    "numpy",
+    "scikit-learn",
+    "matplotlib",
+    "rdkit",
+    "Pillow",
+    "joblib",
+    "streamlit==1.59.2",
+    "plotly==6.9.0",
+    "reportlab",
 ]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+]
+deep = [
+    "torch",
+]
+
 [tool.setuptools.packages.find]
 include = ["mole_ai*"]
 

@@ -2,7 +2,7 @@
 Molecular fingerprint utilities for MOLE-AI.
 """
 
-from rdkit.Chem import AllChem
+from rdkit.Chem import rdFingerprintGenerator
 from rdkit.DataStructs import TanimotoSimilarity
 
 
@@ -29,11 +29,11 @@ def generate_morgan_fingerprint(
         Morgan fingerprint.
     """
 
-    return AllChem.GetMorganFingerprintAsBitVect(
-        mol,
-        radius,
-        nBits=n_bits,
+    generator = rdFingerprintGenerator.GetMorganGenerator(
+        radius=radius,
+        fpSize=n_bits,
     )
+    return generator.GetFingerprint(mol)
 
 
 def morgan_fingerprint(

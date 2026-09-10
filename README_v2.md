@@ -267,11 +267,8 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
-For RDKit system dependencies required by the Streamlit deployment environment, see:
-
-```text
-packages.txt
-```
+For RDKit, use the Python package from `requirements.txt` (`rdkit`).
+No system apt packages are required for Streamlit Cloud.
 
 ---
 
@@ -379,8 +376,7 @@ MOLE-AI/
 ├── v2_app.py
 ├── app.py
 ├── requirements.txt
-├── packages.txt
-├── environment.yml
+├── environment.conda.yml
 ├── pyproject.toml
 ├── CHANGELOG.md
 ├── RELEASE_NOTES.md

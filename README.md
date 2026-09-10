@@ -632,30 +632,30 @@ validate_smiles("CCO")
 Generate molecular descriptors
 
 ```python
+from mole_ai.chem.smiles import smiles_to_mol
 from mole_ai.chem.descriptors import calculate_descriptors
 
-calculate_descriptors("CCO")
+mol = smiles_to_mol("CCO")
+calculate_descriptors(mol)
 ```
 
 Generate Morgan fingerprints
 
 ```python
+from mole_ai.chem.smiles import smiles_to_mol
 from mole_ai.chem.fingerprints import generate_morgan_fingerprint
 
-generate_morgan_fingerprint("CCO")
+mol = smiles_to_mol("CCO")
+generate_morgan_fingerprint(mol)
 ```
 
 Predict molecular properties
 
 ```python
-from mole_ai.models.predict import predict
+from mole_ai.models.predict import predict_from_smiles
 
-predictions = predict(
-    model="models/model.pkl",
-    input_data="data/features.csv",
-)
-
-print(predictions)
+prediction = predict_from_smiles("CCO")
+print(prediction)
 ```
 
 ---

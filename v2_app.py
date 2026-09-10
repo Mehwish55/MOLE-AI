@@ -5,6 +5,7 @@ AI-Powered Computational Drug Discovery Platform
 
 import streamlit as st
 import pandas as pd
+import hmac
 from mole_ai.utils.validation import validate_molecular_library
 
 from mole_ai.workflows.drug_discovery import DrugDiscoveryWorkflow
@@ -27,6 +28,44 @@ def add_csv_download(dataframe):
         file_name="MOLE_AI_ranked_results.csv",
         mime="text/csv",
     )
+
+# ============================================================
+# Commercial Access
+# ============================================================
+
+FREE_BATCH_LIMIT = 5
+PAID_BATCH_LIMIT = 500
+
+
+def check_paid_access():
+    """Check the commercial batch-analysis access code."""
+    access_code = st.secrets.get("MOLE_AI_ACCESS_CODE", "")
+
+    if not access_code:
+        st.warning(
+            "Paid access is not configured yet. "
+            "Please contact MOLE-AI for access."
+        )
+        return False
+
+    entered_code = st.text_input(
+        "🔐 Paid access code",
+        type="password",
+        help="Enter the access code provided after purchase.",
+    )
+
+    if entered_code:
+        if hmac.compare_digest(
+            entered_code.strip(),
+            str(access_code).strip(),
+        ):
+            st.success("✅ Paid access unlocked")
+            return True
+
+        st.error("❌ Invalid access code")
+
+    return False
+
 
 # ============================================================
 # Page Configuration
@@ -1247,10 +1286,61 @@ with tab3:
                 )
 
 
-                if st.button(
-                    "🚀 Run Batch Screening",
-                    type="primary",
-                ):
+                molecule_count = len(dataframe)
+                run_batch = False
+
+                if molecule_count > PAID_BATCH_LIMIT:
+
+                    st.error(
+                        f"🔒 This demo supports up to {PAID_BATCH_LIMIT} molecules "
+                        "per paid batch analysis."
+                    )
+
+                    st.info(
+                        "For larger libraries or custom screening workflows, "
+                        "please contact MOLE-AI."
+                    )
+
+                elif molecule_count > FREE_BATCH_LIMIT:
+
+                    st.info(
+                        f"🔒 Paid Batch Analysis — {molecule_count} molecules detected"
+                    )
+
+                    st.markdown(
+                        f"""
+                        **MOLE-AI Batch Analysis — €49**
+
+                        - Up to {PAID_BATCH_LIMIT} molecules
+                        - Automated QSAR screening
+                        - ADMET profiling
+                        - Candidate ranking
+                        - Full CSV results
+                        - Professional PDF report
+                        """
+                    )
+
+                    paid_access = check_paid_access()
+
+                    if paid_access:
+                        run_batch = st.button(
+                            "🚀 Run Paid Batch Screening",
+                            type="primary",
+                        )
+
+                else:
+
+                    st.success(
+                        f"🆓 Free demo: {molecule_count} molecule(s) "
+                        f"(up to {FREE_BATCH_LIMIT})"
+                    )
+
+                    run_batch = st.button(
+                        "🚀 Run Batch Screening",
+                        type="primary",
+                    )
+
+                if run_batch:
 
                     try:
 

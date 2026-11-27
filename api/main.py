@@ -93,6 +93,17 @@ def _analyze(smiles: str) -> tuple[dict, dict]:
     return result, explanation
 
 
+def _normalise_code(value: str) -> bytes:
+    """Bytes for a constant-time comparison.
+
+    ``hmac.compare_digest`` raises TypeError on str with non-ASCII characters,
+    so codes are compared as UTF-8 bytes. A leading byte-order mark (which
+    shell pipelines and text editors can add) and surrounding whitespace are
+    stripped first.
+    """
+    return value.replace("﻿", "").strip().encode("utf-8")
+
+
 def _check_access(code: str | None, count: int) -> None:
     if count > PAID_BATCH_LIMIT:
         raise HTTPException(
@@ -101,10 +112,10 @@ def _check_access(code: str | None, count: int) -> None:
         )
     if count <= FREE_BATCH_LIMIT:
         return
-    expected = os.environ.get("MOLE_AI_ACCESS_CODE", "")
+    expected = _normalise_code(os.environ.get("MOLE_AI_ACCESS_CODE", ""))
     if not expected:
         raise HTTPException(402, "Paid access is not configured yet. Contact MOLE-AI.")
-    if not code or not hmac.compare_digest(code.strip(), expected.strip()):
+    if not code or not hmac.compare_digest(_normalise_code(code), expected):
         raise HTTPException(
             402,
             f"{count} molecules requires a paid batch (€49). Enter a valid access code.",

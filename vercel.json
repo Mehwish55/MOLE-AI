@@ -3,7 +3,7 @@
     {
       "src": "vercel_api/index.py",
       "use": "@vercel/python",
-      "config": { "includeFiles": ["api/**", "mole_ai/**"] }
+      "config": { "includeFiles": ["api/**", "mole_ai/**"], "maxDuration": 300 }
     },
     { "src": "web/**", "use": "@vercel/static" }
   ],

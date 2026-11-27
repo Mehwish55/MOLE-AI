@@ -1,6 +1,7 @@
 // Base URL of the MOLE-AI API (FastAPI service in api/).
-// Local development uses the API on port 8000; set the deployed URL below.
+// Locally the API runs on port 8000; on Vercel it is served from /api on the
+// same domain (see vercel.json and vercel_api/index.py).
 window.MOLE_API =
   location.hostname === "localhost" || location.hostname === "127.0.0.1"
     ? "http://localhost:8000"
-    : "https://mole-ai-api.onrender.com";
+    : "/api";

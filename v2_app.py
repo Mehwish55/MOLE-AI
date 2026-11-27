@@ -1,1956 +1,668 @@
 """
 MOLE-AI v2
-AI-Powered Computational Drug Discovery Platform
+Computational drug discovery platform.
 """
 
-import streamlit as st
-import pandas as pd
 import hmac
-from mole_ai.utils.validation import validate_molecular_library
+import json
 
-from mole_ai.workflows.drug_discovery import DrugDiscoveryWorkflow
-from mole_ai.workflows.batch_screening import BatchScreeningWorkflow
-from mole_ai.ranking.comparison import CandidateComparison
-from mole_ai.ranking.explanation import CandidateExplainer
+import pandas as pd
+import streamlit as st
+
 from mole_ai.agents.similarity_agent import SimilarityAgent
-from mole_ai.utils.export import dataframe_to_csv
+from mole_ai.ranking.explanation import CandidateExplainer
 from mole_ai.reports.pdf_report import (
-    generate_single_molecule_report,
     generate_batch_screening_report,
+    generate_single_molecule_report,
 )
-
-def add_csv_download(dataframe):
-    """Display a download button for a DataFrame."""
-    csv_data = dataframe_to_csv(dataframe)
-    st.download_button(
-        label="📥 Download Ranked Results (CSV)",
-        data=csv_data,
-        file_name="MOLE_AI_ranked_results.csv",
-        mime="text/csv",
-    )
-
-# ============================================================
-# Commercial Access
-# ============================================================
+from mole_ai.ui import components as ui
+from mole_ai.workflows.batch_screening import BatchScreeningWorkflow
+from mole_ai.workflows.drug_discovery import DrugDiscoveryWorkflow
 
 FREE_BATCH_LIMIT = 5
 PAID_BATCH_LIMIT = 500
 
+EXAMPLES = {
+    "Aspirin": "CC(=O)Oc1ccccc1C(=O)O",
+    "Caffeine": "Cn1cnc2c1c(=O)n(C)c(=O)n2C",
+    "Ibuprofen": "CC(C)Cc1ccc(cc1)C(C)C(=O)O",
+}
 
-def check_paid_access():
+SCORE = st.column_config.ProgressColumn
+NUM = st.column_config.NumberColumn
+
+
+st.set_page_config(page_title="MOLE-AI", page_icon="⬡", layout="wide")
+ui.apply_theme()
+
+
+# ============================================================
+# Helpers
+# ============================================================
+
+
+def read_library(uploaded) -> pd.DataFrame:
+    """Read a CSV and normalise column names (SMILES, Smiles, ' smiles ')."""
+    frame = pd.read_csv(uploaded)
+    frame.columns = [str(c).strip().lower() for c in frame.columns]
+    return frame
+
+
+def check_paid_access() -> bool:
     """Check the commercial batch-analysis access code."""
     access_code = st.secrets.get("MOLE_AI_ACCESS_CODE", "")
 
     if not access_code:
-        st.warning(
-            "Paid access is not configured yet. "
-            "Please contact MOLE-AI for access."
-        )
+        st.warning("Paid access is not configured yet. Contact MOLE-AI for access.")
         return False
 
-    entered_code = st.text_input(
-        "🔐 Paid access code",
+    entered = st.text_input(
+        "Access code",
         type="password",
-        help="Enter the access code provided after purchase.",
+        help="The code you received after purchase.",
     )
-
-    if entered_code:
-        if hmac.compare_digest(
-            entered_code.strip(),
-            str(access_code).strip(),
-        ):
-            st.success("✅ Paid access unlocked")
-            return True
-
-        st.error("❌ Invalid access code")
-
+    if not entered:
+        return False
+    if hmac.compare_digest(entered.strip(), str(access_code).strip()):
+        st.success("Access confirmed.")
+        return True
+    st.error("That access code is not valid.")
     return False
 
 
+def round_columns(frame: pd.DataFrame, spec: dict) -> pd.DataFrame:
+    for column, digits in spec.items():
+        if column in frame.columns:
+            frame[column] = pd.to_numeric(frame[column], errors="coerce").round(digits)
+    return frame
+
+
+def kv_table(mapping: dict) -> None:
+    frame = pd.DataFrame(list(mapping.items()), columns=["Property", "Value"])
+    frame["Value"] = frame["Value"].astype(str)
+    st.dataframe(frame, width="stretch", hide_index=True)
+
+
 # ============================================================
-# Page Configuration
+# Masthead and navigation
 # ============================================================
 
-st.set_page_config(
-    page_title="MOLE-AI",
-    page_icon="🧬",
-    layout="wide",
+ui.masthead()
+
+tab_home, tab_single, tab_batch, tab_sim = st.tabs(
+    ["Overview", "Single molecule", "Batch screening", "Similarity"]
 )
 
 
 # ============================================================
-# Header
+# Overview
 # ============================================================
 
-logo_col = st.columns([1, 2, 1])[1]
-
-with logo_col:
-    st.image(
-        "assets/images/logo.png",
-        width=300,
+with tab_home:
+    ui.hero(
+        "Screen, rank and refine <em>drug candidates</em>.",
+        "Molecular descriptors, QSAR activity and ADMET profiling "
+        "brought together in one prioritisation workflow.",
     )
 
-st.title("🧬 MOLE-AI")
-
-st.markdown(
-    """
-    ### AI-Powered Computational Drug Discovery Platform
-
-    **Integrating cheminformatics, machine learning,
-    molecular property analysis, ADMET screening,
-    and candidate prioritization**.
-    """
-)
-
-st.divider()
-
-
-# ============================================================
-# Navigation
-# ============================================================
-
-tab1, tab2, tab3, tab4 = st.tabs(
-    [
-        "🏠 Getting Started",
-        "🔬 Single Molecule Analysis",
-        "📂 Batch Screening",
-        "🧬 Molecular Similarity",
-    ]
-)
-
-
-# ============================================================
-# TAB 0 — GETTING STARTED
-# ============================================================
-
-with tab1:
-
-    st.header("🏠 Welcome to MOLE-AI")
-
-    st.markdown(
-        """
-        MOLE-AI is an AI-powered computational drug discovery
-        platform for **molecular screening and candidate prioritization**.
-
-        You can use MOLE-AI in two ways:
-
-        **🔬 Single Molecule Analysis**
-        - Enter one molecule using a SMILES string.
-        - Analyze molecular properties.
-        - Predict molecular activity.
-        - Evaluate ADMET-related properties.
-        - Calculate a candidate prioritization score.
-
-        **📂 Batch Screening**
-        - Upload your own CSV file containing molecular SMILES.
-        - Screen multiple molecules automatically.
-        - Compare molecular activity and ADMET scores.
-        - Rank candidates.
-        - Identify high-priority molecules.
-        - Download the screening results.
-        """
+    ui.feature_cards(
+        [
+            (
+                "01",
+                "Single molecule",
+                "Profile one compound: activity, ADMET, ranking and "
+                "suggested analogues.",
+                "Input — one SMILES string",
+            ),
+            (
+                "02",
+                "Batch screening",
+                "Rank a whole library and export the shortlist as CSV "
+                "or a PDF report.",
+                f"Input — CSV, free up to {FREE_BATCH_LIMIT} molecules",
+            ),
+            (
+                "03",
+                "Similarity",
+                "Find the library compounds closest in structure to a "
+                "query molecule.",
+                "Input — SMILES and a CSV library",
+            ),
+        ]
     )
 
-    st.divider()
-
-    st.subheader("🚀 How to use MOLE-AI")
-
-    st.markdown(
-        """
-        **Step 1 — Prepare your molecular data**
-
-        Create a CSV file containing a column named:
-
-        `smiles`
-
-        Example:
-
-        | smiles |
-        |---|
-        | CCO |
-        | CCN |
-        | c1ccccc1 |
-        | CC(=O)Oc1ccccc1C(=O)O |
-
-        **Step 2 — Upload your CSV**
-
-        Go to the **📂 Batch Screening** tab and upload your file.
-
-        **Step 3 — Run screening**
-
-        MOLE-AI will analyze each valid molecule and generate
-        activity, ADMET, molecular-property and prioritization results.
-
-        **Step 4 — Compare candidates**
-
-        Use the ranking and analytics to identify molecules
-        that may deserve further computational investigation.
-
-        **Step 5 — Download results**
-
-        Download the complete screening results as a CSV file.
-        """
+    ui.subheading("How it works")
+    ui.steps(
+        [
+            ("Prepare", "A CSV with a smiles column. compound_id is optional."),
+            ("Upload", "Drop the file into Batch screening."),
+            ("Screen", "Each molecule is validated, described, predicted and scored."),
+            ("Export", "Download the ranked results or a PDF report."),
+        ]
     )
 
-    st.info(
-        "💡 MOLE-AI provides computational predictions and "
-        "prioritization. Results should be experimentally validated "
-        "before making biological or clinical decisions."
-    )
 
 # ============================================================
-# TAB 2 — SINGLE MOLECULE ANALYSIS
+# Single molecule
 # ============================================================
 
-with tab2:
 
-    st.header("🔬 Single Molecule Analysis")
+def _use_example(smiles: str) -> None:
+    st.session_state.smiles_input = smiles
+    st.session_state.run_single = True
 
-    smiles = st.text_input(
-        "Enter molecular SMILES",
-        placeholder="Example: CCO",
+
+def run_single(smiles: str) -> None:
+    result = DrugDiscoveryWorkflow().analyze(smiles)
+    explanation = CandidateExplainer().explain(result)
+    st.session_state.single = {
+        "smiles": smiles,
+        "result": result,
+        "explanation": explanation,
+        "pdf": generate_single_molecule_report(result, explanation),
+    }
+
+
+def render_single(data: dict) -> None:
+    result = data["result"]
+    explanation = data["explanation"]
+    ranking = result["ranking"]
+    qsar = result["qsar"]
+    admet = result["admet"]
+    descriptors = result["chemistry"]["descriptors"]
+
+    ui.molecule_line(data["smiles"], ranking["priority"])
+
+    ui.stats(
+        [
+            ("Overall score", f"{ranking['overall_score']:.1f}", "/ 100"),
+            ("Predicted pIC50", f"{qsar['predicted_pIC50']:.2f}", None),
+            ("ADMET score", f"{admet['admet_score']:.1f}", "/ 100"),
+            ("Activity", str(qsar["activity_class"]).replace(" Activity", ""), None),
+        ]
     )
 
-    analyze_button = st.button(
-        "🚀 Analyze Molecule",
-        type="primary",
+    if explanation.get("recommendation"):
+        ui.note(explanation["recommendation"], title="Recommendation")
+
+    t_sum, t_props, t_opt, t_ana, t_exp = st.tabs(
+        ["Summary", "Properties", "Optimisation", "Analogues", "Export"]
     )
 
-    if analyze_button:
+    # ---- Summary ------------------------------------------------------
+    with t_sum:
+        left, right = st.columns([2, 3], gap="large")
+        with left:
+            ui.subheading("Score profile")
+            bars = [
+                ("Activity", ranking["activity_score"]),
+                ("ADMET", ranking["admet_score"]),
+            ]
+            props_score = explanation.get("molecular_properties", {}).get("score")
+            if props_score is not None:
+                bars.append(("Molecular properties", props_score))
+            bars.append(("Overall", ranking["overall_score"]))
+            ui.score_bars(bars)
+        with right:
+            ui.subheading("Interpretation")
+            ui.definition_list(
+                [
+                    ("Activity", explanation["activity"].get("interpretation")),
+                    ("ADMET", explanation["admet"].get("interpretation")),
+                    ("Ranking", explanation["ranking"].get("interpretation")),
+                ]
+            )
+            if explanation.get("summary"):
+                with st.expander("Full scientific summary"):
+                    st.write(explanation["summary"])
 
-        if not smiles.strip():
+    # ---- Properties ---------------------------------------------------
+    with t_props:
+        left, right = st.columns(2, gap="large")
+        with left:
+            ui.subheading("Molecular descriptors")
+            kv_table(descriptors)
+        with right:
+            ui.subheading("ADMET")
+            st.html(
+                f'<div class="mol">Drug-likeness '
+                f'{ui.badge_html(admet["drug_likeness"])}</div>'
+            )
+            if "properties" in admet:
+                kv_table(admet["properties"])
+            ui.small(f"QSAR model: {qsar['model']}")
 
-            st.warning(
-                "Please enter a SMILES string."
+    # ---- Optimisation -------------------------------------------------
+    with t_opt:
+        optimization = result.get("optimization") or {}
+        if not optimization:
+            ui.small("No optimisation analysis is available for this molecule.")
+        else:
+            level = optimization.get("optimization_priority", "Not available")
+            tone = {"High": "bad", "Medium": "warn"}.get(level, "good")
+            st.html(
+                f'<div class="mol">Optimisation need '
+                f'{ui.badge_html(level, tone)}</div>'
+            )
+            left, right = st.columns([3, 2], gap="large")
+            with left:
+                ui.subheading("Suggestions")
+                suggestions = optimization.get("suggestions", [])
+                if suggestions:
+                    st.markdown("\n".join(f"{i}. {s}" for i, s in enumerate(suggestions, 1)))
+                else:
+                    ui.small("No changes suggested.")
+            with right:
+                properties = optimization.get("properties", {})
+                if properties:
+                    ui.subheading("Properties considered")
+                    kv_table(properties)
+
+    # ---- Analogues ----------------------------------------------------
+    with t_ana:
+        evaluated = result.get("generated_candidate_evaluation") or []
+        generated = result.get("generation") or []
+
+        if evaluated:
+            frame = pd.DataFrame(evaluated)
+            best = frame.loc[frame["overall_score"].idxmax()]
+            ui.stats(
+                [
+                    ("Analogues", len(frame), None),
+                    ("Best overall score", f"{best['overall_score']:.1f}", "/ 100"),
+                    ("Top analogue", best["candidate_id"], None),
+                ]
+            )
+            columns = [
+                c
+                for c in [
+                    "candidate_id", "smiles", "strategy", "similarity",
+                    "predicted_pIC50", "admet_score", "overall_score", "priority",
+                ]
+                if c in frame.columns
+            ]
+            view = round_columns(
+                frame[columns].copy(),
+                {"similarity": 3, "predicted_pIC50": 2, "admet_score": 1, "overall_score": 1},
+            ).sort_values("overall_score", ascending=False)
+            st.dataframe(
+                view,
+                width="stretch",
+                hide_index=True,
+                column_config={
+                    "candidate_id": "ID",
+                    "smiles": "SMILES",
+                    "strategy": "Strategy",
+                    "similarity": SCORE("Similarity", min_value=0, max_value=1, format="%.2f"),
+                    "predicted_pIC50": NUM("pIC50", format="%.2f"),
+                    "admet_score": NUM("ADMET", format="%.1f"),
+                    "overall_score": SCORE("Overall", min_value=0, max_value=100, format="%.1f"),
+                    "priority": "Priority",
+                },
+            )
+            st.download_button(
+                "Download analogues (CSV)",
+                frame.to_csv(index=False),
+                file_name="MOLE_AI_evaluated_generated_candidates.csv",
+                mime="text/csv",
+                on_click="ignore",
+            )
+        elif generated:
+            st.dataframe(pd.DataFrame(generated), width="stretch", hide_index=True)
+        else:
+            ui.small("No analogues could be generated for this molecule.")
+
+        if evaluated or generated:
+            ui.small(
+                "Analogues are rule-based structural variants with predicted "
+                "scores. They are hypotheses, not validated compounds."
             )
 
+    # ---- Export -------------------------------------------------------
+    with t_exp:
+        ui.subheading("Downloads")
+        c1, c2, _ = st.columns([1, 1, 2])
+        with c1:
+            st.download_button(
+                "PDF report",
+                data["pdf"],
+                file_name="MOLE_AI_single_molecule_report.pdf",
+                mime="application/pdf",
+                type="primary",
+                on_click="ignore",
+                width="stretch",
+            )
+        with c2:
+            st.download_button(
+                "Raw data (JSON)",
+                json.dumps(result, indent=2, default=str),
+                file_name="MOLE_AI_analysis.json",
+                mime="application/json",
+                on_click="ignore",
+                width="stretch",
+            )
+        with st.expander("View raw analysis"):
+            st.json(result, expanded=False)
+
+
+with tab_single:
+    ui.section(
+        "Single molecule",
+        kicker="Analyse",
+        note="Enter a SMILES string to profile one compound.",
+    )
+
+    with st.container():
+        col_in, col_btn = st.columns([5, 1], vertical_alignment="bottom")
+        with col_in:
+            smiles = st.text_input(
+                "SMILES",
+                key="smiles_input",
+                placeholder="e.g. CC(=O)Oc1ccccc1C(=O)O",
+            )
+        with col_btn:
+            analyze = st.button("Analyse", type="primary", width="stretch")
+
+        ex_cols = st.columns([0.6, 0.7, 0.7, 0.8, 6])
+        ex_cols[0].html('<div class="small" style="padding-top:6px">Try</div>')
+        for col, (name, value) in zip(ex_cols[1:4], EXAMPLES.items()):
+            col.button(name, type="tertiary", on_click=_use_example, args=(value,), key=f"ex_{name}")
+
+    if analyze or st.session_state.pop("run_single", False):
+        smiles = st.session_state.get("smiles_input", "").strip()
+        if not smiles:
+            st.warning("Enter a SMILES string first.")
         else:
-
             try:
-
-                with st.spinner(
-                    "Running MOLE-AI v2 analysis..."
-                ):
-
-                    workflow = DrugDiscoveryWorkflow()
-
-                    result = workflow.analyze(
-                        smiles.strip()
-                    )
-                    explainer = CandidateExplainer()
-
-                    explanation = explainer.explain(result)
-
-                st.success(
-                    "✅ Molecular analysis completed"
-                )
-
-                # ====================================================
-                # Extract Results
-                # ====================================================
-
-                ranking = result["ranking"]
-                qsar = result["qsar"]
-                admet = result["admet"]
-                chemistry = result["chemistry"]
-
-                descriptors = chemistry["descriptors"]
-
-
-                # ====================================================
-                # Candidate Assessment
-                # ====================================================
-
-                st.subheader(
-                    "🎯 Candidate Assessment"
-                )
-
-                col1, col2, col3, col4 = st.columns(4)
-
-                with col1:
-
-                    st.metric(
-                        "Overall Score",
-                        f"{ranking['overall_score']:.1f}",
-                    )
-
-                with col2:
-
-                    st.metric(
-                        "Predicted pIC50",
-                        f"{qsar['predicted_pIC50']:.3f}",
-                    )
-
-                with col3:
-
-                    st.metric(
-                        "ADMET Score",
-                        f"{admet['admet_score']:.1f}",
-                    )
-
-                with col4:
-
-                    st.metric(
-                        "Priority",
-                        ranking["priority"],
-                    )
-
-
-                # ====================================================
-                # Candidate Score Profile
-                # ====================================================
-
-                st.markdown(
-                    "### 📊 Candidate Score Profile"
-                )
-
-                score_df = pd.DataFrame(
-                    {
-                        "Score": [
-                            float(
-                                ranking["activity_score"]
-                            ),
-                            float(
-                                ranking["admet_score"]
-                            ),
-                            float(
-                                ranking["overall_score"]
-                            ),
-                        ]
-                    },
-                    index=[
-                        "Activity",
-                        "ADMET",
-                        "Overall",
-                    ],
-                )
-
-                st.bar_chart(
-                    score_df,
-                    y="Score",
-                    width="stretch",
-                )
-
-
-                st.divider()
-
-                # ====================================================
-                # Chemistry Analysis
-                # ====================================================
-
-                st.subheader(
-                    "🧪 Chemistry Analysis"
-                )
-
-                chemistry_df = pd.DataFrame(
-                    list(descriptors.items()),
-                    columns=[
-                        "Property",
-                        "Value",
-                    ],
-                )
-
-                # Convert values to strings to avoid
-                # mixed-type Arrow serialization problems.
-                chemistry_df["Value"] = (
-                    chemistry_df["Value"].astype(str)
-                )
-
-                st.dataframe(
-                    chemistry_df,
-                    width="stretch",
-                    hide_index=True,
-                )
-
-
-                st.divider()
-
-
-                # ====================================================
-                # QSAR Prediction
-                # ====================================================
-
-                st.subheader(
-                    "🤖 QSAR Prediction"
-                )
-
-                qsar_col1, qsar_col2 = st.columns(2)
-
-                with qsar_col1:
-
-                    st.metric(
-                        "Predicted pIC50",
-                        f"{qsar['predicted_pIC50']:.3f}",
-                    )
-
-                with qsar_col2:
-
-                    st.metric(
-                        "Activity Classification",
-                        qsar["activity_class"],
-                    )
-
-                st.info(
-                    f"Model: {qsar['model']}"
-                )
-
-
-                st.divider()
-
-
-                # ====================================================
-                # ADMET Analysis
-                # ====================================================
-
-                st.subheader(
-                    "💊 ADMET / Drug-Likeness"
-                )
-
-                admet_col1, admet_col2 = st.columns(2)
-
-                with admet_col1:
-
-                    st.metric(
-                        "ADMET Score",
-                        f"{admet['admet_score']:.1f}",
-                    )
-
-                with admet_col2:
-
-                    st.write(
-                        "Drug-likeness"
-                    )
-
-                    if (
-                        "Drug-like"
-                        in admet["drug_likeness"]
-                    ):
-
-                        st.success(
-                            admet["drug_likeness"]
-                        )
-
-                    else:
-
-                        st.warning(
-                            admet["drug_likeness"]
-                        )
-
-
-                # ADMET properties
-                if "properties" in admet:
-
-                    st.markdown(
-                        "### ADMET Properties"
-                    )
-
-                    admet_df = pd.DataFrame(
-                        list(
-                            admet[
-                                "properties"
-                            ].items()
-                        ),
-                        columns=[
-                            "Property",
-                            "Value",
-                        ],
-                    )
-
-                    admet_df["Value"] = (
-                        admet_df["Value"].astype(str)
-                    )
-
-                    st.dataframe(
-                        admet_df,
-                        width="stretch",
-                        hide_index=True,
-                    )
-
-
-                st.divider()
-
-
-                # ====================================================
-                # Candidate Ranking
-                # ====================================================
-
-                st.subheader(
-                    "🎯 Candidate Prioritization"
-                )
-
-
-                # Three aligned numerical metrics
-                rank_col1, rank_col2, rank_col3 = st.columns(3)
-
-                with rank_col1:
-
-                    st.metric(
-                        "Activity Score",
-                        f"{ranking['activity_score']:.1f}",
-                    )
-
-                with rank_col2:
-
-                    st.metric(
-                        "ADMET Score",
-                        f"{ranking['admet_score']:.1f}",
-                    )
-
-                with rank_col3:
-
-                    st.metric(
-                        "Overall Score",
-                        f"{ranking['overall_score']:.1f}",
-                    )
-
-
-                st.write("")
-
-
-                # ====================================================
-                # Priority Indicator
-                # ====================================================
-
-                st.markdown(
-                    "### 🏆 Candidate Priority"
-                )
-
-                priority = ranking["priority"]
-
-                if priority == "High Priority":
-
-                    st.success(
-                        f"🟢 **{priority}**"
-                    )
-
-                elif priority == "Medium Priority":
-
-                    st.warning(
-                        f"🟡 **{priority}**"
-                    )
-
-                else:
-
-                    st.info(
-                        f"🔵 **{priority}**"
-                    )
-
-
-                # ====================================================
-                # Ranking Summary
-                # ====================================================
-
-                st.markdown(
-                    "### 📊 Ranking Summary"
-                )
-
-                ranking_df = pd.DataFrame(
-                    {
-                        "Metric": [
-                            "Activity Score",
-                            "ADMET Score",
-                            "Overall Score",
-                        ],
-                        "Score": [
-                            float(
-                                ranking[
-                                    "activity_score"
-                                ]
-                            ),
-                            float(
-                                ranking[
-                                    "admet_score"
-                                ]
-                            ),
-                            float(
-                                ranking[
-                                    "overall_score"
-                                ]
-                            ),
-                        ],
-                    }
-                )
-
-                st.dataframe(
-                    ranking_df,
-                    width="stretch",
-                    hide_index=True,
-                )
-
-
-                # ====================================================
-                # Ranking Interpretation
-                # ====================================================
-
-                st.markdown(
-                    "### 📊 Ranking Interpretation"
-                )
-
-                st.write(
-                    f"""
-                    **Activity Score:** \
-{ranking['activity_score']:.1f}/100
-
-                    **ADMET Score:** \
-{ranking['admet_score']:.1f}/100
-
-                    **Overall Score:** \
-{ranking['overall_score']:.1f}/100
-
-                    **Final Priority:** \
-{ranking['priority']}
-                    """
-                )
-
-
-                st.divider()
-                # ====================================================
-                # Computational Candidate Explainability
-                # ====================================================
-                
-                st.subheader(
-                    "🔬 Computational Candidate Explainability"
-                )
-                
-                st.markdown(
-                    "### 🔬 Activity Interpretation"
-                )
-                
-                st.info(
-                    explanation["activity"]["interpretation"]
-                )
-                
-                st.write(
-                    f"**Predicted pIC50:** "
-                    f"{explanation['activity']['predicted_pIC50']:.3f}"
-                )
-                
-                st.write(
-                    f"**Activity Classification:** "
-                    f"{explanation['activity']['classification']}"
-                )
-                
-                st.write(
-                    f"**Activity Score:** "
-                    f"{explanation['activity']['score']:.1f}/100"
-                )
-                
-                
-                st.markdown(
-                    "### 💊 ADMET Interpretation"
-                )
-                
-                st.info(
-                    explanation["admet"]["interpretation"]
-                )
-                
-                st.write(
-                    f"**ADMET Score:** "
-                    f"{explanation['admet']['score']:.1f}/100"
-                )
-                
-                st.write(
-                    f"**Drug-likeness:** "
-                    f"{explanation['admet']['drug_likeness']}"
-                )
-                
-                
-                st.markdown(
-                    "### 🎯 Ranking Interpretation"
-                )
-                
-                st.info(
-                    explanation["ranking"]["interpretation"]
-                )
-                
-                st.write(
-                    f"**Overall Score:** "
-                    f"{explanation['ranking']['overall_score']:.1f}/100"
-                )
-                
-                st.write(
-                    f"**Priority:** "
-                    f"{explanation['ranking']['priority']}"
-                )
-                
-                
-                st.markdown(
-                    "### 🏆 Final Recommendation"
-                )
-
-                st.success(
-                    explanation["recommendation"]
-                )
-
-                st.markdown(
-                    "### 📋 Scientific Summary"
-                )
-
-                st.write(
-                    explanation["summary"]
-                )
-
-                st.divider()
-
-                # ====================================================
-                # Professional PDF Report
-                # ====================================================
-
-                st.subheader(
-                    "📄 Research Report"
-                )
-
-                single_pdf = (
-                    generate_single_molecule_report(
-                        result,
-                        explanation,
-                    )
-                )
-                st.download_button(
-                    label="📥 Download Professional PDF Report",
-                    data=single_pdf,
-                    file_name="MOLE_AI_single_molecule_report.pdf",
-                    mime="application/pdf",
-                    key="single_molecule_pdf_download",
-                )
-
-                # ====================================================
-                # ====================================================
-                # Molecular Optimization
-                # ====================================================
-
-                st.subheader(
-                    "🧬 Molecular Optimization"
-                )
-
-                optimization = result.get(
-                    "optimization",
-                    {}
-                )
-
-                if optimization:
-
-                    optimization_priority = optimization.get(
-                        "optimization_priority",
-                        "Not available",
-                    )
-
-                    st.markdown(
-                        "### 🎯 Optimization Priority"
-                    )
-
-                    if optimization_priority == "High":
-                        st.error(
-                            f"🔴 **{optimization_priority} Priority**"
-                        )
-
-                    elif optimization_priority == "Medium":
-                        st.warning(
-                            f"🟡 **{optimization_priority} Priority**"
-                        )
-
-                    else:
-                        st.success(
-                            f"🟢 **{optimization_priority} Priority**"
-                        )
-
-                    st.markdown(
-                        "### 💡 Optimization Suggestions"
-                    )
-
-                    suggestions = optimization.get(
-                        "suggestions",
-                        []
-                    )
-
-                    for suggestion in suggestions:
-                        st.info(
-                            f"• {suggestion}"
-                        )
-
-                    st.markdown(
-                        "### 📊 Optimization Assessment"
-                    )
-
-                    opt_col1, opt_col2, opt_col3 = st.columns(3)
-
-                    with opt_col1:
-                        st.metric(
-                            "Predicted pIC50",
-                            f"{optimization.get('predicted_pIC50', 0):.3f}",
-                        )
-
-                    with opt_col2:
-                        st.metric(
-                            "ADMET Score",
-                            f"{optimization.get('admet_score', 0):.1f}",
-                        )
-
-                    with opt_col3:
-                        st.metric(
-                            "Overall Score",
-                            f"{optimization.get('overall_score', 0):.1f}",
-                        )
-
-                    properties = optimization.get(
-                        "properties",
-                        {}
-                    )
-
-                    if properties:
-
-                        st.markdown(
-                            "### 🧪 Properties Considered"
-                        )
-
-                        properties_df = pd.DataFrame(
-                            {
-                                "Property": list(properties.keys()),
-                                "Value": list(properties.values()),
-                            }
-                        )
-
-                        st.dataframe(
-                            properties_df,
-                            width="stretch",
-                            hide_index=True,
-                        )
-
-                else:
-
-                    st.info(
-                        "Molecular optimization analysis is not available."
-                    )
-
-                st.divider()
-
-                # ====================================================
-                # Molecular Generation
-                # ====================================================
-
-                st.subheader(
-                    "🧪 Molecular Generation"
-                )
-
-                st.caption(
-                    "Generate controlled molecular variants from "
-                    "the analyzed parent molecule."
-                )
-
-                generation = result.get(
-                    "generation",
-                    []
-                )
-
-                if generation:
-
-                    st.markdown(
-                        "### 🧬 Generated Candidates"
-                    )
-
-                    generation_df = pd.DataFrame(
-                        generation
-                    )
-
-                    display_columns = [
-                        "candidate_id",
-                        "smiles",
-                        "strategy",
-                        "similarity",
-                    ]
-
-                    available_columns = [
-                        column
-                        for column in display_columns
-                        if column in generation_df.columns
-                    ]
-
-                    st.dataframe(
-                        generation_df[available_columns],
-                        width="stretch",
-                        hide_index=True,
-                    )
-
-                    if "similarity" in generation_df.columns:
-
-                        similarity_df = generation_df[
-                            [
-                                "candidate_id",
-                                "similarity",
-                            ]
-                        ].copy()
-
-                        similarity_df[
-                            "similarity_percent"
-                        ] = (
-                            similarity_df["similarity"] * 100
-                        ).round(2)
-
-                        st.markdown(
-                            "### 📊 Parent–Candidate Similarity"
-                        )
-
-                        st.bar_chart(
-                            similarity_df.set_index(
-                                "candidate_id"
-                            )["similarity_percent"],
-                            y="similarity_percent",
-                            width="stretch",
-                        )
-
-                    generation_csv = (
-                        generation_df.to_csv(
-                            index=False
-                        )
-                    )
-
-                    st.download_button(
-                        label=(
-                            "📥 Download Generated Candidates (CSV)"
-                        ),
-                        data=generation_csv,
-                        file_name=(
-                            "MOLE_AI_generated_candidates.csv"
-                        ),
-                        mime="text/csv",
-                    )
-
-                    st.info(
-                        "⚠️ Generated molecules are computational "
-                        "hypotheses produced by rule-based structural "
-                        "transformations. They are not experimentally "
-                        "validated compounds and require further "
-                        "scientific evaluation."
-                    )
-
-                else:
-
-                    st.info(
-                        "No generated candidates are available "
-                        "for this molecule."
-                    )
-
-                st.divider()
-
-                # ====================================================
-                # Generated Candidate Evaluation
-                # ====================================================
-
-                st.subheader(
-                    "🔬 Generated Candidate Evaluation"
-                )
-
-                st.caption(
-                    "Generated molecules are evaluated using the "
-                    "existing QSAR, ADMET, and candidate-ranking "
-                    "components."
-                )
-
-                evaluated_candidates = result.get(
-                    "generated_candidate_evaluation",
-                    []
-                )
-
-                if evaluated_candidates:
-
-                    evaluation_df = pd.DataFrame(
-                        evaluated_candidates
-                    )
-
-                    evaluation_columns = [
-                        "candidate_id",
-                        "smiles",
-                        "strategy",
-                        "similarity",
-                        "predicted_pIC50",
-                        "activity_class",
-                        "admet_score",
-                        "overall_score",
-                        "priority",
-                    ]
-
-                    available_evaluation_columns = [
-                        column
-                        for column in evaluation_columns
-                        if column in evaluation_df.columns
-                    ]
-
-                    display_evaluation_df = evaluation_df[
-                        available_evaluation_columns
-                    ].copy()
-
-                    if "similarity" in display_evaluation_df.columns:
-                        display_evaluation_df[
-                            "similarity"
-                        ] = (
-                            display_evaluation_df[
-                                "similarity"
-                            ].round(3)
-                        )
-
-                    if "predicted_pIC50" in display_evaluation_df.columns:
-                        display_evaluation_df[
-                            "predicted_pIC50"
-                        ] = (
-                            display_evaluation_df[
-                                "predicted_pIC50"
-                            ].round(3)
-                        )
-
-                    if "admet_score" in display_evaluation_df.columns:
-                        display_evaluation_df[
-                            "admet_score"
-                        ] = (
-                            display_evaluation_df[
-                                "admet_score"
-                            ].round(1)
-                        )
-
-                    if "overall_score" in display_evaluation_df.columns:
-                        display_evaluation_df[
-                            "overall_score"
-                        ] = (
-                            display_evaluation_df[
-                                "overall_score"
-                            ].round(1)
-                        )
-
-                    st.dataframe(
-                        display_evaluation_df,
-                        width="stretch",
-                        hide_index=True,
-                    )
-
-                    # ------------------------------------------------
-                    # Evaluation Summary
-                    # ------------------------------------------------
-
-                    st.markdown(
-                        "### 📊 Evaluation Summary"
-                    )
-
-                    eval_col1, eval_col2, eval_col3 = st.columns(3)
-
-                    with eval_col1:
-                        st.metric(
-                            "Evaluated Candidates",
-                            len(evaluated_candidates),
-                        )
-
-                    with eval_col2:
-                        best_score = float(
-                            evaluation_df[
-                                "overall_score"
-                            ].max()
-                        )
-
-                        st.metric(
-                            "Best Overall Score",
-                            f"{best_score:.1f}",
-                        )
-
-                    with eval_col3:
-                        best_candidate = evaluation_df.iloc[
-                            evaluation_df[
-                                "overall_score"
-                            ].idxmax()
-                        ]
-
-                        st.metric(
-                            "Top Candidate",
-                            best_candidate["candidate_id"],
-                        )
-
-                    # ------------------------------------------------
-                    # Candidate Score Comparison
-                    # ------------------------------------------------
-
-                    if "overall_score" in evaluation_df.columns:
-
-                        score_chart_df = evaluation_df[
-                            [
-                                "candidate_id",
-                                "overall_score",
-                            ]
-                        ].copy()
-
-                        score_chart_df = score_chart_df.set_index(
-                            "candidate_id"
-                        )
-
-                        st.markdown(
-                            "### 🏆 Candidate Overall Scores"
-                        )
-
-                        st.bar_chart(
-                            score_chart_df,
-                            y="overall_score",
-                            width="stretch",
-                        )
-
-                    # ------------------------------------------------
-                    # Download Evaluation Results
-                    # ------------------------------------------------
-
-                    evaluation_csv = evaluation_df.to_csv(
-                        index=False
-                    )
-
-                    st.download_button(
-                        label=(
-                            "📥 Download Evaluated Candidates (CSV)"
-                        ),
-                        data=evaluation_csv,
-                        file_name=(
-                            "MOLE_AI_evaluated_generated_candidates.csv"
-                        ),
-                        mime="text/csv",
-                    )
-
-                    st.info(
-                        "⚠️ Evaluation results are computational "
-                        "predictions used for candidate prioritization. "
-                        "They are not experimental validation of "
-                        "biological activity, safety, or efficacy."
-                    )
-
-                else:
-
-                    st.info(
-                        "No generated candidates were successfully "
-                        "evaluated."
-                    )
-
-                st.divider()
-
-                # ====================================================
-                # Complete Analysis
-                # ====================================================
-
-                with st.expander(
-                    "🔍 View Complete Analysis"
-                ):
-
-                    st.json(result)
-
-
+                with st.spinner("Analysing molecule…"):
+                    run_single(smiles)
             except ValueError as error:
-
-                st.warning(
-                    f"⚠️ Invalid SMILES string: {error}"
-                )
-
-            except Exception as error:
-
-                st.error(
-                    "❌ Molecular analysis failed"
-                )
-
+                st.session_state.pop("single", None)
+                st.warning(f"That SMILES string could not be parsed. {error}")
+            except Exception as error:  # noqa: BLE001
+                st.session_state.pop("single", None)
+                st.error("The analysis failed.")
                 st.exception(error)
 
+    if "single" in st.session_state:
+        st.divider()
+        render_single(st.session_state.single)
+
 
 # ============================================================
-# TAB 3 — BATCH SCREENING
+# Batch screening
 # ============================================================
 
-with tab3:
 
-    st.header(
-        "📂 Batch Molecular Screening"
+def render_batch(results: pd.DataFrame, pdf: bytes) -> None:
+    ok = results[results["Status"] == "Success"]
+    total, successful = len(results), len(ok)
+    top = float(ok["Overall Score"].max()) if successful else 0.0
+    mean = float(ok["Overall Score"].mean()) if successful else 0.0
+
+    ui.stats(
+        [
+            ("Screened", total, None),
+            ("Successful", successful, f"of {total}"),
+            ("Top score", f"{top:.1f}", "/ 100"),
+            ("Mean score", f"{mean:.1f}", "/ 100"),
+        ]
     )
 
-    st.markdown(
-        """
-        Upload a CSV file containing a **smiles** column.
+    c1, c2, _ = st.columns([1, 1, 2])
+    with c1:
+        st.download_button(
+            "Download results (CSV)",
+            results.to_csv(index=False),
+            file_name="MOLE_AI_ranked_screening_results.csv",
+            mime="text/csv",
+            type="primary",
+            on_click="ignore",
+            width="stretch",
+        )
+    with c2:
+        st.download_button(
+            "PDF report",
+            pdf,
+            file_name="MOLE_AI_batch_screening_report.pdf",
+            mime="application/pdf",
+            on_click="ignore",
+            width="stretch",
+        )
 
-        MOLE-AI v2 will process each molecule through:
+    labels = ["Ranking", "Distribution"]
+    failed = results[results["Status"] != "Success"]
+    if len(failed):
+        labels.append(f"Errors ({len(failed)})")
+    tabs = st.tabs(labels)
 
-        **Chemistry → QSAR → ADMET → Candidate Ranking**
-        """
-    )
+    with tabs[0]:
+        ranked = ok.sort_values("Overall Score", ascending=False)
+        st.dataframe(
+            ranked.drop(columns=["Status"]),
+            width="stretch",
+            hide_index=True,
+            column_config={
+                "SMILES": st.column_config.TextColumn("SMILES", width="medium"),
+                "Predicted pIC50": NUM("pIC50", format="%.2f"),
+                "ADMET Score": NUM("ADMET", format="%.1f"),
+                "Overall Score": SCORE("Overall", min_value=0, max_value=100, format="%.1f"),
+                "Best Generated Score": NUM("Best analogue score", format="%.1f"),
+                "Best Generated ADMET": NUM("Best analogue ADMET", format="%.1f"),
+                "Best Candidate Similarity": NUM("Analogue similarity", format="%.2f"),
+            },
+        )
 
-    # ============================================================
-    # CSV Template and Upload Instructions
-    # ============================================================
-    
-    st.markdown(
-        """
-        ### 📋 Prepare Your Molecular Library
-    
-        Upload a CSV file containing a column named **`smiles`**.
-    
-        Each row should contain one molecular SMILES string.
-    
-        **Example:**
-    
-        | smiles |
-        |---|
-        | CCO |
-        | CCN |
-        | c1ccccc1 |
-        | CC(=O)Oc1ccccc1C(=O)O |
-    
-        MOLE-AI will analyze each molecule using:
-    
-        **SMILES Validation → Molecular Properties → QSAR → ADMET → Ranking**
-        """
-    )
-    
-    # ------------------------------------------------------------
-    # Download CSV Template
-    # ------------------------------------------------------------
-    
-    template_df = pd.DataFrame(
-        {
-              "compound_id": ["Compound_001", "Compound_002", "Compound_003", "Compound_004"],
-            "smiles": [
-                "CCO",
-                "CCN",
-                "c1ccccc1",
-                "CC(=O)Oc1ccccc1C(=O)O",
-            ]
-        }
-    )
-    
-    template_csv = template_df.to_csv(
-        index=False
-    )
-    
-    st.download_button(
-        label="📥 Download CSV Template",
-        data=template_csv,
-        file_name="MOLE_AI_molecular_library_template.csv",
-        mime="text/csv",
-    )
-    
-    st.caption(
-        "You can download the template, replace the example SMILES "
-        "with your own molecules, and upload the file below."
-    )
-    
-    st.divider()
-    
-    # ------------------------------------------------------------
-    # Upload
-    # ------------------------------------------------------------
-    
-    uploaded_file = st.file_uploader(
-        "📂 Upload your molecular library",
-        type=["csv"],
-        help="CSV must contain a column named 'smiles'.",
-    )
-
-    if uploaded_file is not None:
-
-        try:
-
-            dataframe = pd.read_csv(
-                uploaded_file
+    with tabs[1]:
+        if not successful:
+            ui.small("No successful predictions to chart.")
+        else:
+            left, right = st.columns(2, gap="large")
+            with left:
+                ui.subheading("Activity")
+                st.bar_chart(
+                    ok["Activity"].value_counts().rename("Molecules"),
+                    color=ui.ACCENT,
+                    horizontal=True,
+                    height=220,
+                )
+            with right:
+                ui.subheading("Priority")
+                st.bar_chart(
+                    ok["Priority"].value_counts().rename("Molecules"),
+                    color=ui.ACCENT,
+                    horizontal=True,
+                    height=220,
+                )
+            ui.subheading("Overall score by compound")
+            label = "Compound ID" if "Compound ID" in ok.columns else "SMILES"
+            st.bar_chart(
+                ok.sort_values("Overall Score", ascending=False).set_index(label)["Overall Score"],
+                color=ui.ACCENT,
+                height=280,
             )
 
-            # Normalize column names so common variants such as
-            # SMILES, Smiles, and "smiles " are accepted.
-            dataframe.columns = [
-                str(column).strip().lower()
-                for column in dataframe.columns
-            ]
-
-
-            st.subheader(
-                "📄 Input Dataset"
-            )
-
-            st.write(
-                f"Number of molecules: {len(dataframe)}"
-            )
-
-
+    if len(failed):
+        with tabs[2]:
             st.dataframe(
-                dataframe.head(10),
+                failed[[c for c in ["Compound ID", "SMILES", "Status"] if c in failed.columns]],
                 width="stretch",
                 hide_index=True,
             )
 
 
-            if "smiles" not in dataframe.columns:
-
-                st.error(
-                    "❌ CSV must contain a column named 'smiles'."
-                )
-
-
-            else:
-
-                st.success(
-                    "✅ SMILES column detected"
-                )
-
-
-                molecule_count = len(dataframe)
-                run_batch = False
-
-                if molecule_count > PAID_BATCH_LIMIT:
-
-                    st.error(
-                        f"🔒 This demo supports up to {PAID_BATCH_LIMIT} molecules "
-                        "per paid batch analysis."
-                    )
-
-                    st.info(
-                        "For larger libraries or custom screening workflows, "
-                        "please contact MOLE-AI."
-                    )
-
-                elif molecule_count > FREE_BATCH_LIMIT:
-
-                    st.info(
-                        f"🔒 Paid Batch Analysis — {molecule_count} molecules detected"
-                    )
-
-                    st.markdown(
-                        f"""
-                        **MOLE-AI Batch Analysis — €49**
-
-                        - Up to {PAID_BATCH_LIMIT} molecules
-                        - Automated QSAR screening
-                        - ADMET profiling
-                        - Candidate ranking
-                        - Full CSV results
-                        - Professional PDF report
-                        """
-                    )
-
-                    paid_access = check_paid_access()
-
-                    if paid_access:
-                        run_batch = st.button(
-                            "🚀 Run Paid Batch Screening",
-                            type="primary",
-                        )
-
-                else:
-
-                    st.success(
-                        f"🆓 Free demo: {molecule_count} molecule(s) "
-                        f"(up to {FREE_BATCH_LIMIT})"
-                    )
-
-                    run_batch = st.button(
-                        "🚀 Run Batch Screening",
-                        type="primary",
-                    )
-
-                if run_batch:
-
-                    try:
-
-                        with st.spinner(
-                            "Screening molecular library..."
-                        ):
-
-                            workflow = (
-                                BatchScreeningWorkflow()
-                            )
-
-                            results = workflow.screen(
-                                dataframe,
-                                smiles_column="smiles",
-                            )
-
-
-                        st.success(
-                            "✅ Batch screening completed"
-                        )
-
-
-                        st.subheader(
-                            "🎯 Ranked Candidates"
-                        )
-
-
-                        st.dataframe(
-                            results,
-                            width="stretch",
-                            hide_index=True,
-                        )
-                        # Download ranked screening results
-                        results_csv = results.to_csv(index=False)
-
-                        st.download_button(
-                            label="📥 Download Ranked Results (CSV)",
-                            data=results_csv,
-                            file_name="MOLE_AI_ranked_screening_results.csv",
-                            mime="text/csv",
-                        )
-
-                        # Professional Batch Screening PDF Report
-                        batch_pdf = generate_batch_screening_report(
-                            results
-                        )
-
-                        st.download_button(
-                            label="📄 Download Professional PDF Report",
-                            data=batch_pdf,
-                            file_name="MOLE_AI_batch_screening_report.pdf",
-                            mime="application/pdf",
-                            key="batch_screening_pdf_download",
-                        )
-
-
-
-
-
-                        # --------------------------------------------
-                        # Batch Screening Analytics
-                        # --------------------------------------------
-
-                        st.markdown(
-                            "### 📊 Screening Overview"
-                        )
-
-                        # Basic statistics
-                        total = len(results)
-
-                        successful = len(
-                            results[
-                                results["Status"]
-                                == "Success"
-                            ]
-                        )
-
-                        failed = total - successful
-
-
-                        # Top score
-                        if successful > 0:
-
-                            top_score = float(
-                                results[
-                                    "Overall Score"
-                                ].max()
-                            )
-
-                        else:
-
-                            top_score = 0.0
-
-
-                        # Average score
-                        if successful > 0:
-
-                            average_score = float(
-                                results[
-                                    "Overall Score"
-                                ].mean()
-                            )
-
-                        else:
-
-                            average_score = 0.0
-
-
-                        # --------------------------------------------
-                        # Overview Cards
-                        # --------------------------------------------
-
-                        overview_col1, overview_col2, overview_col3, overview_col4 = (
-                            st.columns(4)
-                        )
-
-                        with overview_col1:
-
-                            st.metric(
-                                "Total Molecules",
-                                total,
-                            )
-
-                        with overview_col2:
-
-                            st.metric(
-                                "Successful",
-                                successful,
-                            )
-
-                        with overview_col3:
-
-                            st.metric(
-                                "Top Overall Score",
-                                f"{top_score:.1f}",
-                            )
-
-                        with overview_col4:
-
-                            st.metric(
-                                "Average Score",
-                                f"{average_score:.1f}",
-                            )
-
-
-                        st.divider()
-
-
-                        # --------------------------------------------
-                        # Activity Distribution
-                        # --------------------------------------------
-
-                        st.markdown(
-                            "### 🤖 Activity Distribution"
-                        )
-
-                        if (
-                            successful > 0
-                            and "Activity" in results.columns
-                        ):
-
-                            activity_counts = (
-                                results[
-                                    results["Status"]
-                                    == "Success"
-                                ]["Activity"]
-                                .value_counts()
-                            )
-
-                            activity_df = (
-                                activity_counts
-                                .rename("Molecules")
-                                .to_frame()
-                            )
-
-                            st.bar_chart(
-                                activity_df,
-                                y="Molecules",
-                                width="stretch",
-                            )
-
-                        else:
-
-                            st.info(
-                                "No successful activity predictions available."
-                            )
-
-
-                        st.divider()
-
-
-                        # --------------------------------------------
-                        # Priority Distribution
-                        # --------------------------------------------
-
-                        st.markdown(
-                            "### 🎯 Candidate Priority Distribution"
-                        )
-
-                        if (
-                            successful > 0
-                            and "Priority" in results.columns
-                        ):
-
-                            priority_counts = (
-                                results[
-                                    results["Status"]
-                                    == "Success"
-                                ]["Priority"]
-                                .value_counts()
-                            )
-
-                            priority_df = (
-                                priority_counts
-                                .rename("Molecules")
-                                .to_frame()
-                            )
-
-                            st.bar_chart(
-                                priority_df,
-                                y="Molecules",
-                                width="stretch",
-                            )
-
-                        else:
-
-                            st.info(
-                                "No priority results available."
-                            )
-
-
-                        st.divider()
-
-
-                        # --------------------------------------------
-                        # Overall Score Distribution
-                        # --------------------------------------------
-
-                        st.markdown(
-                            "### 📈 Overall Score Distribution"
-                        )
-
-                        if (
-                            successful > 0
-                            and "Overall Score"
-                            in results.columns
-                        ):
-
-                            score_chart = (
-                                results[
-                                    results["Status"]
-                                    == "Success"
-                                ][
-                                    [
-                                        "SMILES",
-                                        "Overall Score",
-                                    ]
-                                ]
-                                .set_index("SMILES")
-                            )
-
-                            st.bar_chart(
-                                score_chart,
-                                y="Overall Score",
-                                width="stretch",
-                            )
-
-                        else:
-
-                            st.info(
-                                "No successful scores available."
-                            )
-
-
-                        st.divider()
-
-
-                        # --------------------------------------------
-                        # Top Candidates
-                        # --------------------------------------------
-
-                        st.markdown(
-                            "### 🏆 Top Candidates"
-                        )
-
-                        if successful > 0:
-
-                            top_candidates = (
-                                results[
-                                    results["Status"]
-                                    == "Success"
-                                ]
-                                .sort_values(
-                                    "Overall Score",
-                                    ascending=False,
-                                )
-                                .head(10)
-                            )
-
-
-                            # Create a clean display copy
-                            top_candidates_display = (
-                                top_candidates.copy()
-                            )
-
-
-                            st.dataframe(
-                                top_candidates_display,
-                                width="stretch",
-                                hide_index=True,
-                            )
-
-                        else:
-
-                            st.info(
-                                "No successful candidates available."
-                            )
-
-
-                        st.divider()
-
-
-                        # --------------------------------------------
-                        # Screening Statistics
-                        # --------------------------------------------
-
-                        st.markdown(
-                            "### 📋 Screening Statistics"
-                        )
-
-                        stats_col1, stats_col2 = (
-                            st.columns(2)
-                        )
-
-                        with stats_col1:
-
-                            st.metric(
-                                "Successful Analyses",
-                                successful,
-                            )
-
-                        with stats_col2:
-
-                            st.metric(
-                                "Failed Analyses",
-                                failed,
-                            )
-
-                        # --------------------------------------------
-                        # Download
-                        # --------------------------------------------
-
-                        csv_results = (
-                            results.to_csv(
-                                index=False
-                            )
-                        )
-
-
-                        st.download_button(
-                            label=(
-                                "⬇️ Download Screening Results"
-                            ),
-                            data=csv_results,
-                            file_name=(
-                                "MOLE_AI_v2_screening_results.csv"
-                            ),
-                            mime="text/csv",
-                        )
-
-
-                    except Exception as error:
-
-                        st.error(
-                            "❌ Batch screening failed"
-                        )
-
-                        st.exception(error)
-
-
-        except Exception as error:
-
-            st.error(
-                "❌ Could not read CSV file"
-            )
-
-            st.exception(error)
-
-
-# ============================================================
-# TAB 4 — MOLECULAR SIMILARITY
-# ============================================================
-
-with tab4:
-
-    st.header("🧬 Molecular Similarity Search")
-
-    st.markdown(
-        """
-        Compare a query molecule against a molecular library
-        using **Morgan fingerprints** and **Tanimoto similarity**.
-
-        Higher similarity values indicate greater structural similarity.
-        """
+with tab_batch:
+    ui.section(
+        "Batch screening",
+        kicker="Screen",
+        note="Rank a compound library by predicted activity and ADMET profile.",
     )
 
-    st.divider()
+    left, right = st.columns([2, 3], gap="large")
 
-    similarity_col1, similarity_col2 = st.columns(2)
-
-    with similarity_col1:
-
-        query_smiles = st.text_input(
-            "🔬 Query Molecule SMILES",
-            placeholder="Example: CCO",
-            help="Enter a valid molecular SMILES string.",
+    with left:
+        ui.subheading("Prepare your file")
+        st.markdown(
+            "One row per molecule, with a `smiles` column. "
+            "A `compound_id` column is optional."
+        )
+        template = pd.DataFrame(
+            {
+                "compound_id": ["Compound_001", "Compound_002", "Compound_003", "Compound_004"],
+                "smiles": ["CCO", "CCN", "c1ccccc1", "CC(=O)Oc1ccccc1C(=O)O"],
+            }
+        )
+        st.download_button(
+            "Download CSV template",
+            template.to_csv(index=False),
+            file_name="MOLE_AI_molecular_library_template.csv",
+            mime="text/csv",
+            on_click="ignore",
         )
 
-    with similarity_col2:
+    with right:
+        uploaded = st.file_uploader("Molecular library (CSV)", type=["csv"])
 
-        top_k = st.number_input(
-            "🏆 Number of Similar Molecules",
-            min_value=1,
-            max_value=100,
-            value=10,
-            step=1,
-        )
+    if uploaded is None:
+        with left:
+            ui.plans(FREE_BATCH_LIMIT, PAID_BATCH_LIMIT)
+        st.session_state.pop("batch", None)
+    else:
+        try:
+            library = read_library(uploaded)
+        except Exception as error:  # noqa: BLE001
+            st.error("That file could not be read as CSV.")
+            st.exception(error)
+            library = None
 
-    st.markdown("### 📂 Molecular Library")
+        if library is not None:
+            count = len(library)
+            tier = "free" if count <= FREE_BATCH_LIMIT else "paid"
 
-    similarity_file = st.file_uploader(
-        "Upload a CSV containing a 'smiles' column",
+            with left:
+                ui.plans(FREE_BATCH_LIMIT, PAID_BATCH_LIMIT, active=tier)
+
+            with right:
+                with st.expander(f"Preview — {count} molecules"):
+                    st.dataframe(library.head(10), width="stretch", hide_index=True)
+
+                run_batch = False
+                if "smiles" not in library.columns:
+                    st.error("No `smiles` column found in this file.")
+                elif count > PAID_BATCH_LIMIT:
+                    st.error(
+                        f"This file has {count} molecules; the limit is "
+                        f"{PAID_BATCH_LIMIT}. Contact MOLE-AI for larger libraries."
+                    )
+                elif tier == "paid":
+                    ui.small(f"{count} molecules — a paid batch (€49) is required.")
+                    if check_paid_access():
+                        run_batch = st.button("Run screening", type="primary")
+                else:
+                    run_batch = st.button("Run screening", type="primary")
+
+            file_id = (uploaded.name, uploaded.size)
+            if st.session_state.get("batch", {}).get("file") != file_id:
+                st.session_state.pop("batch", None)
+
+            if run_batch:
+                try:
+                    with st.spinner(f"Screening {count} molecules…"):
+                        results = BatchScreeningWorkflow().screen(library, smiles_column="smiles")
+                        st.session_state.batch = {
+                            "file": file_id,
+                            "results": results,
+                            "pdf": generate_batch_screening_report(results),
+                        }
+                except Exception as error:  # noqa: BLE001
+                    st.error("Batch screening failed.")
+                    st.exception(error)
+
+            if "batch" in st.session_state:
+                st.divider()
+                render_batch(
+                    st.session_state.batch["results"],
+                    st.session_state.batch["pdf"],
+                )
+
+
+# ============================================================
+# Similarity
+# ============================================================
+
+with tab_sim:
+    ui.section(
+        "Similarity search",
+        kicker="Compare",
+        note="Rank a library by structural similarity to a query molecule "
+        "(Morgan fingerprints, Tanimoto coefficient).",
+    )
+
+    c1, c2 = st.columns([4, 1], vertical_alignment="bottom")
+    with c1:
+        query = st.text_input("Query SMILES", placeholder="e.g. CC(=O)Oc1ccccc1C(=O)O")
+    with c2:
+        top_k = st.number_input("Results", min_value=1, max_value=100, value=10, step=1)
+
+    sim_file = st.file_uploader(
+        "Library (CSV with a smiles column)",
         type=["csv"],
         key="similarity_library_upload",
-        help="Optional compound_id column is supported.",
     )
 
-    if similarity_file is not None:
-
+    if sim_file is None:
+        st.session_state.pop("similarity", None)
+    else:
         try:
+            sim_library = read_library(sim_file)
+        except Exception as error:  # noqa: BLE001
+            st.error("That file could not be read as CSV.")
+            st.exception(error)
+            sim_library = None
 
-            similarity_df = pd.read_csv(
-                similarity_file
-            )
-
-            # Normalize column names so common variants such as
-            # SMILES, Smiles, and "smiles " are accepted.
-            similarity_df.columns = [
-                str(column).strip().lower()
-                for column in similarity_df.columns
-            ]
-
-            st.write(
-                f"Library molecules: {len(similarity_df)}"
-            )
-
-            st.dataframe(
-                similarity_df.head(10),
-                width="stretch",
-                hide_index=True,
-            )
-
-            if "smiles" not in similarity_df.columns:
-
-                st.error(
-                    "❌ CSV must contain a column named 'smiles'."
-                )
-
-            elif not query_smiles.strip():
-
-                st.warning(
-                    "⚠️ Please enter a query molecule SMILES."
-                )
-
+        if sim_library is not None:
+            if "smiles" not in sim_library.columns:
+                st.error("No `smiles` column found in this file.")
             else:
-
-                if st.button(
-                    "🔎 Find Similar Molecules",
-                    type="primary",
-                ):
-
+                ui.small(f"{len(sim_library)} molecules in library.")
+                if st.button("Find similar molecules", type="primary", disabled=not query.strip()):
                     try:
-
-                        with st.spinner(
-                            "Calculating molecular similarities..."
-                        ):
-
-                            similarity_agent = SimilarityAgent()
-
-                            library_records = (
-                                similarity_df.to_dict(
-                                    orient="records"
-                                )
+                        with st.spinner("Comparing fingerprints…"):
+                            matches = SimilarityAgent().rank_similar(
+                                query.strip(),
+                                sim_library.to_dict(orient="records"),
+                                top_k=int(top_k),
                             )
-
-                            similarity_results = (
-                                similarity_agent.rank_similar(
-                                    query_smiles.strip(),
-                                    library_records,
-                                    top_k=int(top_k),
-                                )
-                            )
-
-                        if not similarity_results:
-
-                            st.warning(
-                                "No valid molecules were found "
-                                "in the uploaded library."
-                            )
-
-                        else:
-
-                            st.success(
-                                "✅ Molecular similarity analysis completed"
-                            )
-
-                            similarity_results_df = pd.DataFrame(
-                                similarity_results
-                            )
-
-                            similarity_results_df[
-                                "similarity_percent"
-                            ] = (
-                                similarity_results_df[
-                                    "similarity"
-                                ]
-                                * 100
-                            ).round(2)
-
-                            similarity_results_df = (
-                                similarity_results_df[
-                                    [
-                                        "compound_id",
-                                        "smiles",
-                                        "similarity",
-                                        "similarity_percent",
-                                    ]
-                                ]
-                            )
-
-                            st.subheader(
-                                "🏆 Most Similar Molecules"
-                            )
-
-                            st.dataframe(
-                                similarity_results_df,
-                                width="stretch",
-                                hide_index=True,
-                            )
-
-                            st.markdown(
-                                "### 📊 Similarity Scores"
-                            )
-
-                            chart_df = (
-                                similarity_results_df[
-                                    [
-                                        "compound_id",
-                                        "similarity_percent",
-                                    ]
-                                ]
-                                .set_index("compound_id")
-                            )
-
-                            st.bar_chart(
-                                chart_df,
-                                y="similarity_percent",
-                                width="stretch",
-                            )
-
-                            similarity_csv = (
-                                similarity_results_df.to_csv(
-                                    index=False
-                                )
-                            )
-
-                            st.download_button(
-                                label=(
-                                    "📥 Download Similarity Results (CSV)"
-                                ),
-                                data=similarity_csv,
-                                file_name=(
-                                    "MOLE_AI_similarity_results.csv"
-                                ),
-                                mime="text/csv",
-                            )
-
-                    except Exception as error:
-
-                        st.error(
-                            "❌ Molecular similarity analysis failed"
-                        )
-
+                        st.session_state.similarity = matches
+                    except Exception as error:  # noqa: BLE001
+                        st.session_state.pop("similarity", None)
+                        st.error("Similarity search failed.")
                         st.exception(error)
 
-        except Exception as error:
-
-            st.error(
-                "❌ Could not read molecular library"
+    matches = st.session_state.get("similarity")
+    if matches is not None:
+        st.divider()
+        if not matches:
+            st.warning("No valid molecules were found in the library.")
+        else:
+            frame = pd.DataFrame(matches)[["compound_id", "smiles", "similarity"]]
+            st.dataframe(
+                frame,
+                width="stretch",
+                hide_index=True,
+                column_config={
+                    "compound_id": "Compound",
+                    "smiles": "SMILES",
+                    "similarity": SCORE("Tanimoto similarity", min_value=0, max_value=1, format="%.3f"),
+                },
+            )
+            st.download_button(
+                "Download results (CSV)",
+                frame.to_csv(index=False),
+                file_name="MOLE_AI_similarity_results.csv",
+                mime="text/csv",
+                on_click="ignore",
             )
 
-            st.exception(error)
 
-
-# ============================================================
-# Footer
-# ============================================================
-
-st.divider()
-
-st.caption(
-    "MOLE-AI v2 — Computational drug discovery and molecular prioritization"
-)
+ui.footer()

@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MOLE-AI — Computational drug discovery</title>
+  <meta name="description" content="Screen, rank and refine drug candidates with molecular descriptors, QSAR activity and ADMET profiling.">
+  <link rel="icon" href="mark.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="wrap">
+    <header class="mh">
+      <a class="mh-brand" href="#overview">
+        <img class="mh-mark" src="mark.svg" alt="">
+        <span>
+          <span class="mh-name">MOLE-AI</span>
+          <span class="mh-tag">Computational drug discovery</span>
+        </span>
+      </a>
+      <div class="mh-meta">Version 2<br>For research use only</div>
+    </header>
+
+    <nav class="nav" role="tablist">
+      <a href="#overview" data-view="overview">Overview</a>
+      <a href="#single" data-view="single">Single molecule</a>
+      <a href="#batch" data-view="batch">Batch screening</a>
+      <a href="#similarity" data-view="similarity">Similarity</a>
+    </nav>
+
+    <main>
+      <!-- ========================= Overview ========================= -->
+      <section class="view" id="view-overview">
+        <div class="hero">
+          <div class="hero-copy">
+            <div class="sec-k">Small-molecule discovery</div>
+            <h1 class="hero-t">Screen, rank and refine <em>drug candidates</em>.</h1>
+            <p class="hero-s">Molecular descriptors, QSAR activity and ADMET profiling brought together in one prioritisation workflow.</p>
+            <div class="hero-cta">
+              <a class="btn primary" href="#single">Analyse a molecule</a>
+              <a class="btn" href="#batch">Screen a library</a>
+            </div>
+          </div>
+          <figure class="plate">
+            <img src="fig-imatinib.svg" alt="Skeletal structure of imatinib" width="560" height="340">
+            <figcaption>
+              <span class="fig-n">Fig. 1</span>
+              <span><i>Imatinib</i> — C<sub>29</sub>H<sub>31</sub>N<sub>7</sub>O, MW 493.6. A BCR-ABL tyrosine-kinase inhibitor and a landmark of rational drug design.</span>
+            </figcaption>
+          </figure>
+        </div>
+
+        <div class="specs">
+          <div><span class="spec-k">Fingerprints</span><span class="spec-v">Morgan / ECFP4</span></div>
+          <div><span class="spec-k">Activity model</span><span class="spec-v">QSAR · pIC<sub>50</sub></span></div>
+          <div><span class="spec-k">Drug-likeness</span><span class="spec-v">Lipinski Ro5 · ADMET</span></div>
+          <div><span class="spec-k">Toolkit</span><span class="spec-v">RDKit · scikit-learn</span></div>
+        </div>
+
+        <div class="cards">
+          <a class="card" href="#single">
+            <span class="card-n">01</span>
+            <span class="card-t">Single molecule</span>
+            <span class="card-d">Profile one compound: activity, ADMET, ranking and suggested analogues.</span>
+            <span class="card-m">Input — one SMILES string</span>
+          </a>
+          <a class="card" href="#batch">
+            <span class="card-n">02</span>
+            <span class="card-t">Batch screening</span>
+            <span class="card-d">Rank a whole library and export the shortlist as CSV or a PDF report.</span>
+            <span class="card-m">Input — CSV, free up to 5 molecules</span>
+          </a>
+          <a class="card" href="#similarity">
+            <span class="card-n">03</span>
+            <span class="card-t">Similarity</span>
+            <span class="card-d">Find the library compounds closest in structure to a query molecule.</span>
+            <span class="card-m">Input — SMILES and a CSV library</span>
+          </a>
+        </div>
+
+        <h2 class="sub-t">How it works</h2>
+        <div class="steps">
+          <div class="step"><div class="step-n">01</div><div class="step-t">Prepare</div><div class="step-d">A CSV with a smiles column. compound_id is optional.</div></div>
+          <div class="step"><div class="step-n">02</div><div class="step-t">Upload</div><div class="step-d">Drop the file into Batch screening.</div></div>
+          <div class="step"><div class="step-n">03</div><div class="step-t">Screen</div><div class="step-d">Each molecule is validated, described, predicted and scored.</div></div>
+          <div class="step"><div class="step-n">04</div><div class="step-t">Export</div><div class="step-d">Download the ranked results or a PDF report.</div></div>
+        </div>
+      </section>
+
+      <!-- ========================= Single ========================= -->
+      <section class="view" id="view-single" hidden>
+        <div class="sec">
+          <div class="sec-k">Analyse</div>
+          <h1 class="sec-t">Single molecule</h1>
+          <p class="sec-n">Enter a SMILES string to profile one compound.</p>
+        </div>
+
+        <form id="single-form" class="row-form" autocomplete="off">
+          <label class="field grow">
+            <span class="label">SMILES</span>
+            <input id="single-smiles" class="input mono" placeholder="e.g. CC(=O)Oc1ccccc1C(=O)O" spellcheck="false">
+          </label>
+          <button class="btn primary" type="submit">Analyse</button>
+        </form>
+        <div class="examples">
+          <span>Try</span>
+          <button type="button" class="link" data-example="CC(=O)Oc1ccccc1C(=O)O">Aspirin</button>
+          <button type="button" class="link" data-example="Cn1cnc2c1c(=O)n(C)c(=O)n2C">Caffeine</button>
+          <button type="button" class="link" data-example="CC(C)Cc1ccc(cc1)C(C)C(=O)O">Ibuprofen</button>
+        </div>
+
+        <div id="single-status"></div>
+        <div id="single-result"></div>
+      </section>
+
+      <!-- ========================= Batch ========================= -->
+      <section class="view" id="view-batch" hidden>
+        <div class="sec">
+          <div class="sec-k">Screen</div>
+          <h1 class="sec-t">Batch screening</h1>
+          <p class="sec-n">Rank a compound library by predicted activity and ADMET profile.</p>
+        </div>
+
+        <div class="split">
+          <div>
+            <h2 class="sub-t">Prepare your file</h2>
+            <p class="body">One row per molecule, with a <code>smiles</code> column. A <code>compound_id</code> column is optional.</p>
+            <button type="button" class="btn" id="template-btn">Download CSV template</button>
+            <div class="plans">
+              <div class="plan" id="plan-free"><div class="plan-t">Free</div><div class="plan-p">€0</div><div class="plan-d">Up to 5 molecules</div></div>
+              <div class="plan" id="plan-paid"><div class="plan-t">Batch</div><div class="plan-p">€49</div><div class="plan-d">Up to 500 molecules, PDF report</div></div>
+            </div>
+          </div>
+          <div>
+            <span class="label">Molecular library (CSV)</span>
+            <label class="drop" id="batch-drop">
+              <input type="file" accept=".csv,text/csv" id="batch-file" hidden>
+              <span class="drop-t">Drop a CSV here or <u>browse</u></span>
+              <span class="drop-f" id="batch-file-name">No file selected</span>
+            </label>
+            <div id="batch-info" class="small"></div>
+            <label class="field" id="access-field" hidden>
+              <span class="label">Access code</span>
+              <input id="access-code" class="input" type="password" placeholder="Code received after purchase">
+            </label>
+            <button class="btn primary" id="batch-run" disabled>Run screening</button>
+          </div>
+        </div>
+
+        <div id="batch-status"></div>
+        <div id="batch-result"></div>
+      </section>
+
+      <!-- ========================= Similarity ========================= -->
+      <section class="view" id="view-similarity" hidden>
+        <div class="sec">
+          <div class="sec-k">Compare</div>
+          <h1 class="sec-t">Similarity search</h1>
+          <p class="sec-n">Rank a library by structural similarity to a query molecule (Morgan fingerprints, Tanimoto coefficient).</p>
+        </div>
+
+        <form id="sim-form" autocomplete="off">
+          <div class="row-form">
+            <label class="field grow">
+              <span class="label">Query SMILES</span>
+              <input id="sim-query" class="input mono" placeholder="e.g. CC(=O)Oc1ccccc1C(=O)O" spellcheck="false">
+            </label>
+            <label class="field narrow">
+              <span class="label">Results</span>
+              <input id="sim-k" class="input" type="number" min="1" max="100" value="10">
+            </label>
+          </div>
+          <span class="label">Library (CSV with a smiles column)</span>
+          <label class="drop" id="sim-drop">
+            <input type="file" accept=".csv,text/csv" id="sim-file" hidden>
+            <span class="drop-t">Drop a CSV here or <u>browse</u></span>
+            <span class="drop-f" id="sim-file-name">No file selected</span>
+          </label>
+          <button class="btn primary" type="submit">Find similar molecules</button>
+        </form>
+
+        <div id="sim-status"></div>
+        <div id="sim-result"></div>
+      </section>
+    </main>
+
+    <footer class="foot">
+      <span><span class="ruo">RUO</span> MOLE-AI v2 — For research use only. Not for diagnostic or clinical use.</span>
+      <span>Computational predictions. Validate experimentally.</span>
+    </footer>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

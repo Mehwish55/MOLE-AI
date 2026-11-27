@@ -1,10 +1,19 @@
 [theme]
-base = "dark"
-primaryColor = "#2F80ED"
-backgroundColor = "#0E1117"
-secondaryBackgroundColor = "#161B22"
-textColor = "#FAFAFA"
-font = "sans serif"
+base = "light"
+primaryColor = "#1F4E3D"
+backgroundColor = "#F7F5F0"
+secondaryBackgroundColor = "#EFEBE3"
+textColor = "#1B1D1F"
+linkColor = "#1F4E3D"
+borderColor = "#E3DED4"
+dataframeBorderColor = "#E3DED4"
+showWidgetBorder = true
+baseRadius = "4px"
+baseFontSize = 15
+font = "IBM Plex Sans:https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+headingFont = "Source Serif 4:https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&display=swap"
+codeFont = "IBM Plex Mono:https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap"
+chartCategoricalColors = ["#1F4E3D", "#8C6A3F", "#5B6F82", "#9B4A3C", "#7A8C5A"]
 
 [client]
 toolbarMode = "viewer"

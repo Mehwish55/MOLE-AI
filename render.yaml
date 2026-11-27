@@ -10,3 +10,17 @@ services:
         value: "1"
       - key: STREAMLIT_BROWSER_GATHER_USAGE_STATS
         value: "false"
+
+  - type: web
+    name: mole-ai-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile.api
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: ALLOWED_ORIGINS
+        value: "*"
+      - key: MOLE_AI_ACCESS_CODE
+        sync: false
